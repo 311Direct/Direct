@@ -5,21 +5,21 @@ The best task management software system to date!
 
 Contents
 1. Login and User System
-  -[x] Login
-  -[] Authentication Checks
-  -[] Logout
-  -[] Create Users
-  -[] Edit Users
-  -[] Remove Users
+  - [x] Login
+  - [] Authentication Checks
+  - [] Logout
+  - [] Create Users
+  - [] Edit Users
+  - [] Remove Users
  
 2. Tasks
- -[x] View tasks assigned to me 
- -[] Create new tasks
+ - [x] View tasks assigned to me 
+ - [] Create new tasks
  
 3. Projects
-  -[x] View projects I am managing 
-  -[] View all projects in the system
-  -[] View project details
-  -[] Create new project plan  
-  -[] Edit project details
+  - [x] View projects I am managing 
+  - [] View all projects in the system
+  - [] View project details
+  - [] Create new project plan  
+  - [] Edit project details
   
