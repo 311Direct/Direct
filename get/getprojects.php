@@ -19,7 +19,7 @@ class ProjectDB extends DatabaseAdaptor
   
   public function retrieveProjectsAssignedToUser($userID)
   {
-    $genericSearchSingle = $this->dbh->prepare("SELECT * FROM `Tasks` WHERE `assignee` = :me");
+    $genericSearchSingle = $this->dbh->prepare("SELECT * FROM `Projects` WHERE `user_id` = :me");
     $id = filter_input(INPUT_POST, 'userId',FILTER_SANITIZE_NUMBER_INT);
     $genericSearchSingle->bindParam(':me', $id);
     $genericSearchSingle->execute();
@@ -30,15 +30,15 @@ class ProjectDB extends DatabaseAdaptor
     if($count["count"] > 0)
       array_push($count, $rs);
     
-    return $count[0][0];
+    return $count[0];
   }  
   
-  public function saveTask()
+  public function saveProject()
   {
     
   }
   
-  public function updateTask()
+  public function updateProject()
   {
     
   }
