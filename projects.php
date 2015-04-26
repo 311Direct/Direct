@@ -41,18 +41,49 @@
     $r->printResponseWithHeader();
   }
   
-  function createProject($user)
+  function createProject()
   {
     global $projectsDB, $ACTION, $ACTIONRESPONSE;
+       
+    $title  = filter_input(INPUT_POST,'title',    FILTER_SANITIZE_STRING);
+    $userID = filter_input(INPUT_POST,'userId',   FILTER_SANITIZE_NUMBER_INT);
+    $dStart = filter_input(INPUT_POST,'dateStart',FILTER_SANITIZE_STRING); 
+    $dEnd   = filter_input(INPUT_POST,'dateExpectedFinish',   FILTER_SANITIZE_STRING);
+    $manaBy = $_POST['projectManagerUserIds'];
+    $allocB = filter_input(INPUT_POST,'allocatedBudget',  FILTER_SANITIZE_STRING);
+    $allocT = filter_input(INPUT_POST,'allocatedTime',    FILTER_SANITIZE_STRING);
+    $desc   = filter_input(INPUT_POST,'description',      FILTER_SANITIZE_STRING);
+    
+    for($i = 0; $i < count($manaBy); $i++)
+      $manaBy[$i] = filter_var($manaBy[$i], FILTER_SANITIZE_NUMBER_INT);
+    
+    if((!isset($title) || !isset($userID) || !isset($dStart) || !isset($dEnd) || !isset($allocB) || !isset($allocT) || !isset($desc))
+       || (empty($title) || $userID < 0 || empty($dStart) || empty($dEnd) || empty($allocB) || empty($allocT) || empty($desc))
+      )
+    {
+      JSONResponse::printErrorResponseWithHeader("One or more fields were absent or empty for this operation. Please check your values and try again.");
+    }
+        
+    /* At the moment, we simply go about our business, not checking any inputs other than sanatising inputs */
+    $doCreateProject = $projectsDB->saveProject($title, $userID, $dStart, $dEnd, $allocB, $allocT, $desc, $manaBy);
+    if($doCreateProject)
+    {
+      $r = new JSONResponse($ACTIONRESPONSE, $doCreateProject);
+      $r->printResponseWithHeader();
+    } else 
+    {
+      JSONResponse::printErrorResponseWithHeader("Unable to create project."); 
+    }
+    
   }
   
   $id = filter_input(INPUT_POST, 'userId', FILTER_SANITIZE_STRING);
     
   switch($ACTION)
   {
-    case 'PROJECT_LIST_I_AM_MANAGING': getProjectsAssignedToUser($id);      break;
-    case 'PROJECT_LIST_ALL': getAllSystemProjects($id);       break;
-    case 'PROJECT_CREATE':      break;
+    case 'PROJECT_LIST_I_AM_MANAGING': getProjectsAssignedToUser($id); break;
+    case 'PROJECT_LIST_ALL': getAllSystemProjects($id); break;
+    case 'PROJECT_CREATE': createProject(); break;
     case 'PROJECT_GET':      break;
     case 'PROJECT_EDIT':      break;
     case 'PROJECT_ATTACH_DELIVERABLE': break;
