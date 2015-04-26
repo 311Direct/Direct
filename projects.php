@@ -9,7 +9,11 @@
   
   if($_SERVER['REQUEST_METHOD'] == 'POST')
   {
-    if(filter_input(INPUT_POST, 'action', FILTER_SANITIZE_STRING) != 'PROJECT_LIST_I_AM_MANAGING')
+    $ACTION = filter_input(INPUT_POST, 'action', FILTER_SANITIZE_STRING);
+    
+    $ALLOWEDACTIONS = array('PROJECT_LIST_I_AM_MANAGING', 'PROJECT_LIST_ALL', 'PROJECT_CREATE', 'PROJECT_GET', 'PROJECT_EDIT', 'PROJECT_ATTACH_DELIVERABLE');
+    
+    if(!in_array($ACTION, $ALLOWEDACTIONS))
     {
       JSONResponse::printErrorResponseWithHeader("Project request specified was not valid. Please check your variables and try again.");
     }
