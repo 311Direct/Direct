@@ -33,6 +33,23 @@ class ProjectDB extends DatabaseAdaptor
     return $count[0];
   }  
   
+  public function retrieveAllProjectInSystem($authorisedID, $code = NULL)
+  {
+    /* Our controller will check and pass us a code for checking in permissions later.
+      For now, we can simply move onto returning the requested items.
+    */
+    $genericSearchSingle = $this->dbh->prepare("SELECT * FROM `Projects`");
+    $genericSearchSingle->execute();
+    
+    $rs = $genericSearchSingle->fetchAll(PDO::FETCH_ASSOC);
+    
+    $count = array("count"=>count($rs));
+    if($count["count"] > 0)
+      array_push($count, $rs);
+    
+    return $count[0];
+  }
+  
   public function saveProject()
   {
     
