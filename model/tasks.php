@@ -20,8 +20,7 @@ class TaskDB extends DatabaseAdaptor
   public function retrieveTasksAssignedToUser($userID)
   {
     $genericSearchSingle = $this->dbh->prepare("SELECT * FROM `Tasks` WHERE `assignee` = :me");
-    $id = filter_input(INPUT_POST, 'userId',FILTER_SANITIZE_NUMBER_INT);
-    $genericSearchSingle->bindParam(':me', $id);
+    $genericSearchSingle->bindParam(':me', $userID);
     $genericSearchSingle->execute();
     
     $rs = $genericSearchSingle->fetchAll(PDO::FETCH_ASSOC);
