@@ -36,7 +36,7 @@ class TaskDB extends DatabaseAdaptor
   public function saveTask($title, $projectID, $milestoneID, $userID, $priority, $allocated_budget, $allocated_time, $dueDate, $flags, $description, $subTaskIds, $parentID,$assignees = NULL)
   {
     $createQuery = $this->dbh->prepare("INSERT INTO `Tasks` (ID, project_id, milestone_id, parent_task_id, name, assignee, prioity, status, estimate_budge, estimate_time, due_date, flags, description, create_date) VALUES	(NULL, :pid, :mid, :dep, :name, :uid, :priority, 'Open', :ebud, :etime, :ddate, :flags, :desc, NOW())");
-    
+    $lol = "lol";
     $createQuery->bindParam(":pid", $projectID);
     $createQuery->bindParam(":uid", $userID);
     $createQuery->bindParam(":mid", $milestoneID);
@@ -47,6 +47,7 @@ class TaskDB extends DatabaseAdaptor
     $createQuery->bindParam(":etime", $allocated_time);
     $createQuery->bindParam(":ddate", $dueDate);
     $createQuery->bindParam(":desc", $description);
+    $createQuery->bindParam(":flags",$lol);
     
     /* At this point, we will not check if our projects exist. Simply process the error and return.
        Same goes for our milestones; we need to create a generic checking class to reduce
