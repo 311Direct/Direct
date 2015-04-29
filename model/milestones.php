@@ -21,8 +21,7 @@ class MilestoneDB extends DatabaseAdaptor
   {
     //TODO: review the database structure milestone
     $genericSearchSingle = $this->dbh->prepare("SELECT * FROM `Milestones` WHERE `assignee` = :me");
-    $id = filter_input(INPUT_POST, 'userId',FILTER_SANITIZE_NUMBER_INT);
-    $genericSearchSingle->bindParam(':me', $id);
+    $genericSearchSingle->bindParam(':me', $userID);
     $genericSearchSingle->execute();
     
     $rs = $genericSearchSingle->fetchAll(PDO::FETCH_ASSOC);

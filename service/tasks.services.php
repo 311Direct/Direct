@@ -1,14 +1,10 @@
 <?php
-  require_once 'db/db.config.php';
-  require('db/db.inc.php');
+  require_once '../config/db.config.php';
+  require_once '../config/db.inc.php';
+  require_once '../config/json.inc.php';
 
-  require_once 'classes/task.class.php';
-  require_once 'get/gettasks.php';
+  require_once '../model/tasks.php';
   
-  require_once 'classes/task.class.php';
-  require_once 'get/gettasks.php';
-  
-  require_once 'db/json.inc.php';
   
   /* We can only use this page via POST. Die with a JSON error to inform the design team to check! */
   if($_SERVER['REQUEST_METHOD'] != 'POST')
@@ -76,9 +72,7 @@
     {
       JSONResponse::printErrorResponseWithHeader("One or more fields were absent or empty for this operation. Please check your values and try again.");
     }
-    
-    $tasksDB = new taskDB();
-        
+            
     /* At the moment, we simply go about our business, not checking any inputs other than sanatising inputs */
     $doCreatetask = $tasksDB->saveTask($title, $projectID, $milestoneID, $userID, $priority, $allocB, $allocT, $dEnd, $flags, $desc, $subTaskIDs, $dependeeIDs);
     

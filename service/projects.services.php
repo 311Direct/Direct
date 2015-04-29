@@ -1,11 +1,9 @@
 <?php
-  require_once 'db/db.config.php';
-  require('db/db.inc.php');
-    
-  require_once 'classes/project.class.php';
-  require_once 'get/getprojects.php';
-  
-  require_once 'db/json.inc.php';
+  require_once '../config/db.config.php';
+  require_once '../config/db.inc.php';
+  require_once '../config/json.inc.php';
+
+  require_once '../model/projects.php';
   
   /* We can only use this page via POST. Die with a JSON error to inform the design team to check! */
   if($_SERVER['REQUEST_METHOD'] != 'POST')
