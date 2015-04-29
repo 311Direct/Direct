@@ -7,7 +7,7 @@ class MilestoneDB extends DatabaseAdaptor
     $genericSearchSingle->bindParam(':id', $id);
     $genericSearchSingle->execute();
     
-    $rs = $genericSearchSingle->fetchAll();
+    $rs = $genericSearchSingle->fetchAll(PDO::FETCH_ASSOC);
       if(count($rs) == 1)
       {
         return $rs[0];
@@ -33,20 +33,17 @@ class MilestoneDB extends DatabaseAdaptor
     return $count[0];
   }  
   
-  public function saveMilestone($title, $projectID, $milestoneID, $userID, $priority, $allocated_budget, $allocated_time, $dueDate, $flags, $description, $subMilestoneIds, $parentID,$assignees = NULL)
+  public function saveMilestone($title, $mID, $pID, $allocB, $allocT, $dStart, $desc)
   {
-    $createQuery = $this->dbh->prepare("INSERT INTO `Milestones` (project_id, name, status, estimate_budget, estimate_time, description) VALUES	(, '', '', , , '')");
+    $createQuery = $this->dbh->prepare("INSERT INTO `Milestones` (project_id, name, status, estimate_budget, estimate_time, description, created_date) VALUES	(:pid, :name, 'Open', :ebud, :etime, :desc, :dstart)");
     
-    $createQuery->bindParam(":pid", $projectID);
-    $createQuery->bindParam(":uid", $userID);
-    $createQuery->bindParam(":mid", $milestoneID);
-    $createQuery->bindParam(":dep", $parentID);
+    $createQuery->bindParam(":pid", $pID);
     $createQuery->bindParam(":name", $title);
-    $createQuery->bindParam(":priority", $priority);
-    $createQuery->bindParam(":ebud", $allocated_budget);
-    $createQuery->bindParam(":etime", $allocated_time);
-    $createQuery->bindParam(":ddate", $dueDate);
-    $createQuery->bindParam(":desc", $description);
+    $createQuery->bindParam(":ebud", $allocB);
+    $createQuery->bindParam(":etime", $allocT);
+    $createQuery->bindParam(":dstart", $dStart);
+    $createQuery->bindParam(":desc", $desc);
+    $createQuery->bindParam(":name", $title);
     
     /* At this point, we will not check if our projects exist. Simply process the error and return.
        Same goes for our milestones; we need to create a generic checking class to reduce
@@ -57,7 +54,7 @@ class MilestoneDB extends DatabaseAdaptor
     {
       if($createQuery->execute()){
         $pid = $this->dbh->lastInsertId('ID');
-        return array("success"=>true,"newPID"=>$pid);
+        return array("success"=>true,"newMID"=>$pid);
       }
       else
       {

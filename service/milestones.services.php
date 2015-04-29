@@ -39,29 +39,32 @@
   }
     
   function createMilestone()
-  {/*
+  {
+    global $milestonesDB, $ACTION, $ACTIONRESPONSE;
+       
+    $title  = filter_input(INPUT_POST,'title',    FILTER_SANITIZE_STRING);
+    $dStart = filter_input(INPUT_POST,'createdDate',FILTER_SANITIZE_STRING); 
+    $pID    = filter_input(INPUT_POST,'projectId',   FILTER_SANITIZE_STRING);
+    $allocB = filter_input(INPUT_POST,'allocatedBudget',  FILTER_SANITIZE_STRING);
+    $allocT = filter_input(INPUT_POST,'allocatedTime',    FILTER_SANITIZE_STRING);
+    $desc   = filter_input(INPUT_POST,'description',      FILTER_SANITIZE_STRING);
     
-    if((!isset($title) || !isset($userID) || !isset($dStart) || !isset($dEnd) || !isset($allocB) || !isset($allocT) || !isset($desc))
-       || (empty($title) || $userID < 0 || empty($dStart) || empty($dEnd) || empty($allocB) || empty($allocT) || empty($desc))
+   if((!isset($title) || !isset($dStart) || !isset($allocB) || !isset($allocT) || !isset($desc) || !isset($pID))
+       || (empty($title) || $pID < 0 || empty($dStart) || empty($allocB) || empty($allocT) || empty($desc))
       )
     {
       JSONResponse::printErrorResponseWithHeader("One or more fields were absent or empty for this operation. Please check your values and try again.");
     }
     
-    $milestonesDB = new taskDB();
-        
-    /* At the moment, we simply go about our business, not checking any inputs other than sanatising inputs //
-    $doCreatetask = $milestonesDB->saveTask($title, $projectID, $milestoneID, $userID, $priority, $allocB, $allocT, $dEnd, $flags, $desc, $subTaskIDs, $dependeeIDs);
-    
-    if($doCreatetask)
+    if($doCreateMilestone = $milestonesDB->saveMilestone($title, $mID, $pID, $allocB, $allocT, $dStart, $desc))
     {
-      $r = new JSONResponse($ACTIONRESPONSE, $doCreatetask);
+      $r = new JSONResponse($ACTIONRESPONSE, $doCreateMilestone);
       $r->printResponseWithHeader();
-    } else 
-    {
-      JSONResponse::printErrorResponseWithHeader("Unable to create task."); 
     }
-    */
+    else
+    {
+      JSONResponse::printErrorResponseWithHeader("Unable to create milestone."); 
+    }
   }  
 
   $id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_NUMBER_INT);
