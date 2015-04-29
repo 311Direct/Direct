@@ -10,7 +10,7 @@ class MilestoneDB extends DatabaseAdaptor
     $rs = $genericSearchSingle->fetchAll();
       if(count($rs) == 1)
       {
-        return $rs;
+        return $rs[0];
       } else {
         return false;
       }
