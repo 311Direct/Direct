@@ -21,6 +21,15 @@
   $projectsDB = new ProjectDB();
   
   /* Functions that do things to make code easier to manage */
+  function getProjectWithID($projectID)
+  {
+    global $projectsDB, $ACTION, $ACTIONRESPONSE;
+    $projects = $projectsDB->retrieveProjectWithID($projectID);
+    $projectsCount = count($projects);
+    $r = new JSONResponse($ACTIONRESPONSE, array("project"=>$projects));
+    $r->printResponseWithHeader();  
+  }
+  
   function getProjectsAssignedToUser($user)
   {
     global $projectsDB, $ACTION, $ACTIONRESPONSE;
@@ -79,10 +88,10 @@
     
   switch($ACTION)
   {
-    case 'PROJECT_LIST_I_AM_MANAGING': getProjectsAssignedToUser($id); break;
-    case 'PROJECT_LIST_ALL': getAllSystemProjects($id); break;
-    case 'PROJECT_CREATE': createProject(); break;
-    case 'PROJECT_GET':      break;
+    case 'PROJECT_LIST_I_AM_MANAGING': getProjectsAssignedToUser($id);  break;
+    case 'PROJECT_LIST_ALL': getAllSystemProjects($id);                 break;
+    case 'PROJECT_CREATE': createProject();                             break;
+    case 'PROJECT_GET':    getProjectWithID($id);                       break;
     case 'PROJECT_EDIT':      break;
     case 'PROJECT_ATTACH_DELIVERABLE': break;
     default: JSONResponse::printErrorResponseWithHeader("Project request specified was not valid. Please check your variables and try again."); break;

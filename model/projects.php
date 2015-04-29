@@ -7,7 +7,8 @@ class ProjectDB extends DatabaseAdaptor
     $genericSearchSingle->bindParam(':id', $id);
     $genericSearchSingle->execute();
     
-    $rs = $genericSearchSingle->fetchAll();
+    $rs = $genericSearchSingle->fetchAll(PDO::FETCH_ASSOC);
+
       if(count($rs) == 1)
       {
         return $rs[0];
