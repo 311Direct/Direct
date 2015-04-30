@@ -86,6 +86,26 @@
     }
   }  
   
+  function addComment()
+  {
+    global $tasksDB, $ACTION, $ACTIONRESPONSE;
+    
+    $taskID = filter_input(INPUT_POST, 'taskId', FILTER_SANITIZE_NUMBER_INT);
+    $comment= filter_input(INPUT_POST, 'comment', FILTER_SANITIZE_STRING);
+    $userID = filter_input(INPUT_POST, 'userId', FILTER_SANITIZE_STRING);
+    
+    /* Only comment if the task exists */
+    if($taskExists = $tasksDB->retrieveTaskWithID($taskID))
+    {
+      $commentsDB->addCommentForTask();
+    }
+    else
+    {
+      
+    }
+    
+  }
+  
   $id = filter_input(INPUT_POST, 'userId', FILTER_SANITIZE_STRING);
   $ALLOWEDACTIONS = array('TASK_LIST', 'TASK_EDIT', 'TASK_WATCH', 'TASK_ATTACH_FILE', 'TASK_ADD_COMMENT', 'TASK_ASSIGN_SUBTASK', 'SEARCH_TASKS', 'TASK_CREATE');
     

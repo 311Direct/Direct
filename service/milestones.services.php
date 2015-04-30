@@ -34,8 +34,7 @@
     else
     {
       JSONResponse::printErrorResponseWithHeader("Unable to retrieve milestone."); 
-    }
-    
+    }    
   }
     
   function createMilestone()
@@ -65,7 +64,7 @@
     {
       JSONResponse::printErrorResponseWithHeader("Unable to create milestone."); 
     }
-  }  
+  }
 
   $id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_NUMBER_INT);
     
