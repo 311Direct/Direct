@@ -4,20 +4,15 @@
   
 class AccessControlList implements Serializable
 {
-  private $aces;
+  private $aces; //index of this array corresponds to the project ID 
   private $version;
-  private $acllist;
+  private $hasBeenConstructed;
   
-  public function __construct($packedDatabaseVersion)
+  public function __construct($packedDatabaseVersion=null)
   {
         $this->version = 1;
         $this->aces = array();
-        
-        for($i=0;$i<10;$i+=2)
-        {
-          $a = new AccessControlEntry(0, 'r', $i, (50*$i));
-          array_push($this->aces,$a);
-        }
+        $this->hasBeenConstructed = true;
   }
   
   public function serialize()
@@ -35,18 +30,64 @@ class AccessControlList implements Serializable
     $this->aces = unserialize($c['aces']);
   }
 
-  public function getPackedVersion()
-  {  
-    $arrayCount = count($this->aces);
-    if($arrayCount < 1)
-      return null;
-    
-    $returnValue = pack(P_DB_FORMAT_V1, $this->aces[0]->projectID(), $this->aces[0]->objectType(), $this->aces[0]->objectID(), $this->aces[0]->value());
-    
-    for($i = 1; $i < $arrayCount; $i++)
+  public function generateBasePermissions()
+  {
+    if($this->hasBeenConstructed != true)
     {
-      $returnValue .= pack(P_DB_FORMAT_V1, $this->aces[$i]->projectID(), $this->aces[$i]->objectType(), $this->aces[$i]->objectID(), $this->aces[$i]->value());
+      $this->aces = array();
     }
-    return $returnValue;
+           
+    $a = new AccessControlEntry(0, 'R', 0, P_READ);
+    array_push($this->aces,$a);
   }
+
+  public function getEveryonePermission()
+  {
+    return $this->aces[0];
+  }
+  
+  public function deletePermission()
+  {
+    array_pop($this->aces[$newACE->projectID()][$newACE->objectType()][$newACE->objectID()]);
+  }
+  
+  private function addPermission($newACE)
+  {
+    $this->aces[$newACE->projectID()][$newACE->objectType()][$newACE->objectID()] = $newACE;
+  }
+  
+  public function getPermissionForUser($projectID, $userID, $roleID = NULL)
+  {
+    /* First off, we need to make sure we in the right project */
+    if(!array_key_exists($projectID, $this->aces))
+    {
+      //Project does not exist.
+      return $this->getEveryonePermission();
+    }
+    
+    if(array_key_exists($projectID, $this->aces))
+    {
+      if(array_key_exists($roleID, $this->aces[$projectID]['r'][$roleID]))
+        return $this->aces[$projectID()]['r'][$roleID]->value();
+      
+      if(array_key_exists($roleID, $this->aces[$projectID]['u'][$userID]))
+        return $this->aces[$projectID()]['u'][$userID]->value();
+    }
+  }
+  
+  public function modifyPermissions($newACE,$deleteACE=false)
+  {
+    if(array_key_exists($newACE->projectID(), $this->aces))
+    {
+      if($deleteACE)
+        $this->deletePermission($newACE);
+      else
+        $this->aces[$newACE->projectID()][$newACE->objectType()][$newACE->objectID()] = $newACE;
+    }      
+    else
+    {
+      $this->addPermission($newACE);
+    }
+  }
+  
 }
