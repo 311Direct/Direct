@@ -58,8 +58,6 @@ class AccessControlList implements Serializable
   
   public function getPermissionForUser($projectID, $userID, $roleID = NULL)
   {
-    echo "Getting for P:$projectID U:$userID R:$roleID\n";
-    
     if($projectID == 0 && $userID == P_ROOT_LEVEL)
       return P_ROOT_LEVEL;
    
@@ -96,7 +94,6 @@ class AccessControlList implements Serializable
           
       }
     }
-    
     return $this->getEveryonePermission()->value();
   }
   
