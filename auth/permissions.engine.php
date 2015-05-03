@@ -25,6 +25,11 @@ class DummyUser
   {
     return $this->roleID;
   }
+  
+  public function __toString()
+  {
+    return 'P:'.$this->projectID.' U:'.$this->userID.' R:'.$this->roleID.'<br />';
+  }
 }
   
 class PermissionsEngine extends DatabaseAdaptor
@@ -58,10 +63,11 @@ class PermissionsEngine extends DatabaseAdaptor
   }
   
   public function requestPermissionForOperation($requestingUser, $resourceACL, $intendedOperation)
-  {
+  { 
+    $assignedPermissions = $resourceACL->getPermissionForUser($requestingUser->projectID(), $requestingUser->userID(), $requestingUser->roleID());
     
-    $assignedPermissions = $resourceACL->getPermissionForUser($requestingUser->projectID(), $requestingUser->userID(), $requestingUser->roleID())->value();
-    if(($intendedOperation & $assignedPermissions) == $intendedOperation)
+    /* If SQL defines our role as having FULL CONTROL, we ignore whatever has been set in the ACL. */   
+    if((($intendedOperation & $assignedPermissions) == $intendedOperation) || (($requestingUser->projectID() == $this->projectID) && ($this->rolesForCurrentProjectContext[$requestingUser->roleID()]["priv_bit_mask"] & P_FULL_CONTROL)))
     {
       /* We have permission to complete what we need to complete */
       return true;
@@ -70,14 +76,13 @@ class PermissionsEngine extends DatabaseAdaptor
     return false;    
   }
   
-  public function changePermissionsForObject($requestingUser, $resourceACL, $intendedObject, $intendedPrimaryID, $intendedACE, $delete = false)
+  public function changePermissionsForObject($requestingUser, $resourceACL, $intendedACE, $delete = false)
   {
-    if(!requestPermissionForOperation($requestingUser, $resourceACL, $intendedPrimaryID, P_CHANGE_ACCESS))
-      return false;
+    if(!$this->requestPermissionForOperation($requestingUser, $resourceACL, P_CHANGE_ACCESS))
+      return null;
       
     /* Ask our ACL to change this for us */
-    $resourceACL->modifyPermissions($newACE, $delete);    
-    return true;
-  }
-  
+    $resourceACL->modifyPermissions($intendedACE, $delete);    
+    return $resourceACL;
+  }  
 }

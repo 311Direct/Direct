@@ -58,21 +58,46 @@ class AccessControlList implements Serializable
   
   public function getPermissionForUser($projectID, $userID, $roleID = NULL)
   {
-    /* First off, we need to make sure we in the right project */
-    if(!array_key_exists($projectID, $this->aces))
-    {
-      //Project does not exist.
-      return $this->getEveryonePermission();
-    }
+    echo "Getting for P:$projectID U:$userID R:$roleID\n";
     
+    if($projectID == 0 && $userID == P_ROOT_LEVEL)
+      return P_ROOT_LEVEL;
+   
+    if(!array_key_exists($projectID, $this->aces))
+      return $this->getEveryonePermission()->value();
+
     if(array_key_exists($projectID, $this->aces))
     {
-      if(array_key_exists($roleID, $this->aces[$projectID]['r'][$roleID]))
-        return $this->aces[$projectID()]['r'][$roleID]->value();
+      if($roleID == NULL)
+      {
+        if(!array_key_exists('u', $this->aces[$projectID]))
+        { 
+          return $this->getEveryonePermission()->value();
+        }
+        else
+        {
+          if(array_key_exists($roleID, $this->aces[$projectID]['u']))
+            return $this->aces[$projectID]['u'][$roleID]->value();
+        }
+        
+      }
       
-      if(array_key_exists($roleID, $this->aces[$projectID]['u'][$userID]))
-        return $this->aces[$projectID()]['u'][$userID]->value();
+      if($roleID != NULL)
+      {
+        if(!array_key_exists('r', $this->aces[$projectID]))
+        {
+          return $this->getEveryonePermission()->value();
+        }
+        else
+        {
+          if(array_key_exists($roleID, $this->aces[$projectID]['r']))
+            return $this->aces[$projectID]['r'][$roleID]->value();
+        }
+          
+      }
     }
+    
+    return $this->getEveryonePermission()->value();
   }
   
   public function modifyPermissions($newACE,$deleteACE=false)
@@ -89,5 +114,4 @@ class AccessControlList implements Serializable
       $this->addPermission($newACE);
     }
   }
-  
 }
