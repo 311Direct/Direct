@@ -1,0 +1,38 @@
+[29-Apr-2015 18:27:15 Australia/Melbourne] PHP Notice:  Undefined variable: id in /home/vitawebs/public_html/csci311/php/Direct/service/tasks.services.php on line 30
+[29-Apr-2015 18:27:15 Australia/Melbourne] PHP Notice:  Undefined offset: 0 in /home/vitawebs/public_html/csci311/php/Direct/model/tasks.php on line 33
+[29-Apr-2015 18:34:20 Australia/Melbourne] PHP Notice:  Undefined variable: id in /home/vitawebs/public_html/csci311/php/Direct/service/tasks.services.php on line 30
+[29-Apr-2015 18:34:20 Australia/Melbourne] PHP Notice:  Undefined offset: 0 in /home/vitawebs/public_html/csci311/php/Direct/model/tasks.php on line 33
+[29-Apr-2015 18:38:52 Australia/Melbourne] PHP Notice:  Undefined variable: id in /home/vitawebs/public_html/csci311/php/Direct/service/tasks.services.php on line 30
+[29-Apr-2015 18:38:52 Australia/Melbourne] PHP Notice:  Undefined offset: 0 in /home/vitawebs/public_html/csci311/php/Direct/model/tasks.php on line 32
+[29-Apr-2015 18:40:19 Australia/Melbourne] PHP Notice:  Undefined variable: id in /home/vitawebs/public_html/csci311/php/Direct/service/tasks.services.php on line 30
+[29-Apr-2015 18:40:19 Australia/Melbourne] PHP Notice:  Undefined offset: 0 in /home/vitawebs/public_html/csci311/php/Direct/service/tasks.services.php on line 34
+[29-Apr-2015 18:41:10 Australia/Melbourne] PHP Notice:  Undefined offset: 0 in /home/vitawebs/public_html/csci311/php/Direct/service/tasks.services.php on line 34
+[29-Apr-2015 18:42:17 Australia/Melbourne] PHP Notice:  Array to string conversion in /home/vitawebs/public_html/csci311/php/Direct/service/tasks.services.php on line 31
+[29-Apr-2015 18:42:17 Australia/Melbourne] PHP Notice:  Undefined offset: 0 in /home/vitawebs/public_html/csci311/php/Direct/service/tasks.services.php on line 35
+[29-Apr-2015 18:42:44 Australia/Melbourne] PHP Notice:  Undefined offset: 0 in /home/vitawebs/public_html/csci311/php/Direct/service/tasks.services.php on line 31
+[29-Apr-2015 18:42:44 Australia/Melbourne] PHP Notice:  Undefined offset: 0 in /home/vitawebs/public_html/csci311/php/Direct/service/tasks.services.php on line 35
+[29-Apr-2015 18:44:15 Australia/Melbourne] PHP Notice:  Array to string conversion in /home/vitawebs/public_html/csci311/php/Direct/service/tasks.services.php on line 31
+[29-Apr-2015 18:44:15 Australia/Melbourne] PHP Notice:  Undefined index: task_id in /home/vitawebs/public_html/csci311/php/Direct/service/tasks.services.php on line 35
+[29-Apr-2015 18:44:15 Australia/Melbourne] PHP Notice:  Undefined offset: 1 in /home/vitawebs/public_html/csci311/php/Direct/service/tasks.services.php on line 35
+[29-Apr-2015 18:45:15 Australia/Melbourne] PHP Notice:  Undefined index: task_id in /home/vitawebs/public_html/csci311/php/Direct/service/tasks.services.php on line 34
+[29-Apr-2015 19:03:06 Australia/Melbourne] PHP Notice:  Undefined variable: id in /home/vitawebs/public_html/csci311/php/Direct/service/projects.services.php on line 27
+[29-Apr-2015 19:03:06 Australia/Melbourne] PHP Notice:  Undefined offset: 0 in /home/vitawebs/public_html/csci311/php/Direct/model/projects.php on line 33
+[29-Apr-2015 19:03:47 Australia/Melbourne] PHP Notice:  Undefined variable: id in /home/vitawebs/public_html/csci311/php/Direct/service/projects.services.php on line 27
+[29-Apr-2015 19:03:47 Australia/Melbourne] PHP Notice:  Undefined offset: 0 in /home/vitawebs/public_html/csci311/php/Direct/model/projects.php on line 33
+[29-Apr-2015 19:05:34 Australia/Melbourne] PHP Notice:  Undefined offset: 0 in /home/vitawebs/public_html/csci311/php/Direct/model/projects.php on line 32
+[29-Apr-2015 19:08:57 Australia/Melbourne] PHP Notice:  Undefined offset: 0 in /home/vitawebs/public_html/csci311/php/Direct/model/projects.php on line 32
+[29-Apr-2015 19:09:05 Australia/Melbourne] PHP Notice:  Undefined offset: 0 in /home/vitawebs/public_html/csci311/php/Direct/model/projects.php on line 32
+[29-Apr-2015 19:09:43 Australia/Melbourne] PHP Notice:  Undefined offset: 0 in /home/vitawebs/public_html/csci311/php/Direct/model/projects.php on line 32
+[29-Apr-2015 19:51:54 Australia/Melbourne] PHP Notice:  Undefined variable: taskDB in /home/vitawebs/public_html/csci311/php/Direct/service/milestones.service.php on line 33
+[29-Apr-2015 19:51:54 Australia/Melbourne] PHP Fatal error:  Call to a member function retrieveTaskWithMilestone() on a non-object in /home/vitawebs/public_html/csci311/php/Direct/service/milestones.service.php on line 33
+[29-Apr-2015 19:52:13 Australia/Melbourne] PHP Notice:  Undefined variable: taskDB in /home/vitawebs/public_html/csci311/php/Direct/service/milestones.service.php on line 33
+[29-Apr-2015 19:52:13 Australia/Melbourne] PHP Fatal error:  Call to a member function retrieveTaskWithMilestone() on a non-object in /home/vitawebs/public_html/csci311/php/Direct/service/milestones.service.php on line 33
+[29-Apr-2015 19:58:03 Australia/Melbourne] PHP Notice:  Undefined offset: 0 in /home/vitawebs/public_html/csci311/php/Direct/service/milestones.service.php on line 34
+[29-Apr-2015 19:58:32 Australia/Melbourne] PHP Parse error:  syntax error, unexpected '[' in /home/vitawebs/public_html/csci311/php/Direct/service/milestones.service.php on line 34
+[29-Apr-2015 19:58:41 Australia/Melbourne] PHP Parse error:  syntax error, unexpected '[' in /home/vitawebs/public_html/csci311/php/Direct/service/milestones.service.php on line 34
+[29-Apr-2015 20:00:32 Australia/Melbourne] PHP Notice:  Undefined offset: 0 in /home/vitawebs/public_html/csci311/php/Direct/service/milestones.service.php on line 34
+[29-Apr-2015 20:01:13 Australia/Melbourne] PHP Fatal error:  Call to undefined function print_f() in /home/vitawebs/public_html/csci311/php/Direct/model/tasks.php on line 27
+[29-Apr-2015 20:01:25 Australia/Melbourne] PHP Notice:  Array to string conversion in /home/vitawebs/public_html/csci311/php/Direct/model/tasks.php on line 27
+[29-Apr-2015 20:01:25 Australia/Melbourne] PHP Notice:  Undefined offset: 0 in /home/vitawebs/public_html/csci311/php/Direct/service/milestones.service.php on line 34
+[29-Apr-2015 20:13:10 Australia/Melbourne] PHP Notice:  Undefined variable: tasbDB in /home/vitawebs/public_html/csci311/php/Direct/service/milestones.service.php on line 34
+[29-Apr-2015 20:13:10 Australia/Melbourne] PHP Fatal error:  Call to a member function retrieveUsersWithMilestone() on a non-object in /home/vitawebs/public_html/csci311/php/Direct/service/milestones.service.php on line 34
