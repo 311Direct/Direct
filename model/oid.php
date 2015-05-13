@@ -37,7 +37,7 @@ class PermissionObject
     return $this->_oid;
   }
   
-  public function value()
+  public function getValue()
   {
     return $this->_value;
   }   

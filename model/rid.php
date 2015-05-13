@@ -1,58 +1,75 @@
 <?php
+class RoleObject
+{
+  protected $_id;
+  protected $_userID;
+  protected $_projectID;
+  protected $_role;
+  protected $_value;
+  protected $_action;
   
-  class RoleObject
+  public function __construct($id, $userID, $projectID, $roleName, $value)
   {
-    protected $_id;
-    protected $_userID;
-    protected $_projectID;
-    protected $_role;
-    protected $_value;
-    
-    public function __construct($id, $userID, $projectID, $roleName, $value)
-    {
-      $this->_id = $id;
-      $this->_userID = $userID;
-      $this->_projectID = $projectID;
-      $this->_role = $roleName;
-      $this->_value = intval($value);
-    }
+    $this->_id = $id;
+    $this->_userID = $userID;
+    $this->_projectID = $projectID;
+    $this->_role = $roleName;
+    $this->_value = intval($value);
+    $this->_action = 0;
+  }
 
-    public function getID()
-    {
-      return $this->_id;
-    }
-        
-    public function getUserID()
-    {
-      return $this->_userID;
-    }
-    
-    public function getProjectID()
-    {
-      return $this->_projectID;
-    }
-    
-    public function getRole()
-    {
-      return $this->_role;
-    }
-    
-    public function value()
-    {
-      return $this->_value;
-    }    
+  public function getID()
+  {
+    return $this->_id;
+  }
+      
+  public function getUserID()
+  {
+    return $this->_userID;
+  }
+  
+  public function getProjectID()
+  {
+    return $this->_projectID;
+  }
+  
+  public function getRole()
+  {
+    return $this->_role;
+  }
+  
+  public function getValue()
+  {
+    return $this->_value;
+  }    
+  
+  public function setAction($anAction)
+  {
+    if( (($this->_value & P_CHANGE_ACCESS) || ($this->_id == NULL))
+        && ($anAction >= P_ACCESS_MIN)
+        && ($anAction <= P_ACCESS_MAX)
+    )
+    {  $this->_action = $anAction; }
+  }
+  
+  public function getAction()
+  {
+    return $this->_action;
+  }
 }
 
 
 class RolesObjectMapper extends DatabaseAdaptor
 {
+
+  private $_returnedRole;
   
   public function __construct($projectID, $userID)
   {
     parent::__construct();
-
+  
     $stmt = $this->dbh->prepare("SELECT * FROM `PermRoles` WHERE `projectid` = :pid AND `userid` = :uid");    
-
+  
     $stmt->bindParam(':pid', $projectID);
     $stmt->bindParam(':uid', $userID);
     
@@ -65,7 +82,7 @@ class RolesObjectMapper extends DatabaseAdaptor
           JSONResponse::printErrorResponseWithHeader("The user and project specified had multiple roles!");
           
         if(count($possibleMatches) < 1)
-          return false;
+          return null;
           
         if(count($possibleMatches) == 1)
         {
@@ -77,9 +94,11 @@ class RolesObjectMapper extends DatabaseAdaptor
           {
             if($rstmt->execute())
             {
-              $rs = $rstmt->fetch(PDO::FETCH_ASSOC); 
-              $q = new RoleObject($rs['id'], $userID, $projectID, $rs['rolename'], $rs['priv_bit_mask']);
-              var_dump($q);
+              $rs = $rstmt->fetchAll(PDO::FETCH_ASSOC); 
+              if(count($rs) == 1)
+                $this->_returnedRole = new RoleObject($rs[0]['id'], $userID, $projectID, $rs[0]['rolename'], $rs[0]['priv_bit_mask']);
+              else
+                $this->_returnedRole = null;
             }
           }
           catch(PDOException $e)
@@ -99,5 +118,98 @@ class RolesObjectMapper extends DatabaseAdaptor
       JSONResponse::printErrorResponseWithHeader("Unable to load roles - fatal database error: ".$e);
     }
   }
+  
+  
+  public function updateRolePermission($newPermissions)
+  {
     
+    /* Adding a new role */
+    if($newPermissions->getAction() & P_ACCESS_ADD){
+      $stmt = $this->dbh->prepare("INSERT INTO `Roles` VALUES (NULL, :pid, :name, :value)");
+      $stmt->bindValue(':name', $newPermissions->getRole());
+      $stmt->bindValue(':value', $newPermissions->getValue());
+    }
+    
+    /* Deleting a new role */
+    if($newPermissions->getAction() & P_ACCESS_DELETE){
+      $stmt = $this->dbh->prepare("DELETE FROM `Roles` WHERE `projectid` = :pid AND `id` = :id"); 
+      
+      $stmt->bindValue(':id', $newPermissions->getID());
+    }
+    
+    /* Modifying a new role */
+    if($newPermissions->getAction() & P_ACCESS_UPDATE){
+      $stmt = $this->dbh->prepare("UPDATE `Roles` SET `name` = :name, `priv_bit_mask` = :value WHERE `projectid` = :pid AND `id` = :id");
+      
+      $stmt->bindValue(':value', $newPermissions->getValue());
+      $stmt->bindValue(':id', $newPermissions->getID());
+    }
+    
+    $stmt->bindValue(':pid', $newPermissions->getProjectID());
+      
+    try
+    {
+      if($stmt->execute())
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    
+    }
+    catch(PDOException $e)
+    {
+      die($e);
+    }
+  }
+  
+  public function updateRoleMapping($newPermissions)
+  {
+    if($newPermissions->getAction() == 0)
+      return false;    
+      
+    /* ADD a new permission */
+    if(($newPermissions->getAction() & P_ACCESS_ADD) == P_ACCESS_ADD){
+      $stmt = $this->dbh->prepare("INSERT INTO `PermRoles` VALUES (NULL, :uid, :pid, :rid)");
+      $stmt->bindValue(':rid', intval($newPermissions->getID()));
+    }
+    
+    /* DELETE an existing permission */
+    if(($newPermissions->getAction() & P_ACCESS_DELETE) == P_ACCESS_DELETE)
+      $stmt = $this->dbh->prepare("DELETE FROM `PermRoles` WHERE `projectid` = :pid AND `userid` = :uid"); 
+    
+    /* MODIFY an existing permission */
+    if(($newPermissions->getAction() & P_ACCESS_UPDATE) == P_ACCESS_UPDATE){
+      $stmt = $this->dbh->prepare("UPDATE `PermRoles` SET `role` = :rid `WHERE `projectid` = :pid AND `userid` = :uid");
+      $stmt->bindValue(':rid', intval($newPermissions->getID()));
+    }
+  
+    $stmt->bindValue(':pid', $newPermissions->getProjectID());
+    $stmt->bindValue(':uid', $newPermissions->getUserID());
+    
+    try
+    {
+      if($stmt->execute())
+      {
+        return true;
+      }
+      else
+      {
+        print_r( $stmt->errorInfo() );
+        return false;
+      }
+    
+    }
+    catch(PDOException $e)
+    {
+      die($e);
+    } 
+  }
+  
+  public function getRoleInfo()
+  {
+    return $this->_returnedRole;
+  }
 }

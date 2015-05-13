@@ -32,57 +32,47 @@ class DummyUser
   }
 }
   
-class PermissionsEngine extends DatabaseAdaptor
+class PermissionsEngine
 {
-  
-  private $projectID;
-  private $rolesForCurrentProjectContext;
-  
-  public function __construct($currentProjectIDContext)
-  {
-    parent::__construct();
-    $this->projectID = $currentProjectIDContext;
-    $stmt = $this->dbh->prepare("SELECT * FROM `Roles` WHERE `project_id` = :pid");
+  public function requestPermissionForOperation($projectContext, $requestingUserID, $intendedObjectID, $intendedTable, $intendedOperation)
+  { 
     
-    $stmt->bindParam(':pid', $currentProjectIDContext);
-    
-    try
+    $rolesMapper = new RolesObjectMapper($projectContext, $requestingUserID);
+      
+    if($rolesMapper !== null)
     {
-      if($stmt->execute()){
-        $this->rolesForCurrentProjectContext = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      return true === ((($intendedOperation & $rolesMapper->getValue()) == $intendedOperation) || (($rolesMapper->getValue() & P_FULL_CONTROL)));
+    }
+    else
+    {
+      $objectMapper = new PermissionsObjectMapper($userID, $intendedTable, $intendedObjectID);
+      if($objectMapper != null)
+      {
+        return true === ((($intendedOperation & $objectMapper->getValue()) == $intendedOperation) || (($objectMapper->getValue() & P_FULL_CONTROL)));
       }
       else
       {
-        JSONResponse::printErrorResponseWithHeader("Unable to load Roles for this transaction. Aborting operation...");
-      }    
-    }
-    catch(PDOException $e)
-    {
-      JSONResponse::printErrorResponseWithHeader("Unable to load roles - fatal database error: ".$e);
-    }
-  }
-  
-  public function requestPermissionForOperation($requestingUser, $resourceACL, $intendedOperation)
-  { 
-    $assignedPermissions = $resourceACL->getPermissionForUser($requestingUser->projectID(), $requestingUser->userID(), $requestingUser->roleID());
-    
-    /* If SQL defines our role as having FULL CONTROL, we ignore whatever has been set in the ACL. */   
-    if((($intendedOperation & $assignedPermissions) == $intendedOperation) || (($requestingUser->projectID() == $this->projectID) && ($this->rolesForCurrentProjectContext[$requestingUser->roleID()]["priv_bit_mask"] & P_FULL_CONTROL)))
-    {
-      /* We have permission to complete what we need to complete */
-      return true;
-    }   
+        /* Return everybody permission from project */
+        $everyoneMapper = new RolesObjectMapper($projectContext, 0);
+        return true === ((($intendedOperation & $everyoneMapper->getValue()) == $intendedOperation) || (($everyoneMapper->getValue() & P_FULL_CONTROL))); 
         
-    return false;    
+      }
+    }
+        
   }
   
-  public function changePermissionsForObject($requestingUser, $resourceACL, $intendedACE, $delete = false)
+  public function changePermissionsForObject($projectContext, $requestingUserID, $intendedObjectID, $intendedTable, $intendedPermissions)
   {
-    if(!$this->requestPermissionForOperation($requestingUser, $resourceACL, P_CHANGE_ACCESS))
-      return null;
+    /* Check we have permission */
+    if(!requestPermissionForOperation($projectContext, $requestingUserID, $intendedObjectID, $intendedTable, P_CHANGE_ACCESS))
+      return false;
       
-    /* Ask our ACL to change this for us */
-    $resourceACL->modifyPermissions($intendedACE, $delete);    
-    return $resourceACL;
+    if($intendedTable = "Role")
+    {
+      $rolesMapper = new RolesObjectMapper($projectContext, $requestingUserID);
+      
+      $rolesMapper->updateRolePermissions($aNew);
+    } 
+     
   }  
 }
