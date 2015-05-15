@@ -96,15 +96,15 @@ class RoleObject
   public function __construct($userID, $projectID, $roleName, $value, $roleID)
   {
     $this->_id = $roleID;
-    $this->_userID = $userID;
-    $this->_projectID = $projectID;
+    $this->_userID = intval($userID);
+    $this->_projectID = intval($projectID);
     $this->_role = $roleName;
     $this->_value = intval($value);
     $this->_action = 0;
   }
   public function getID()
   {
-    return $this->_id;
+    return $this->_userID;
   }
       
   public function getUserID()
@@ -179,10 +179,12 @@ class RolesObjectMapper extends DatabaseAdaptor
             {
               $rs = $rstmt->fetchAll(PDO::FETCH_ASSOC); 
               if(count($rs) == 1)
-                $this->_returnedRole = new RoleObject($rs[0]['id'], $userID, $projectID, $rs[0]['rolename'], $rs[0]['priv_bit_mask']);
+                $this->_returnedRole = new RoleObject($userID, $projectID, $rs[0]['rolename'], $rs[0]['priv_bit_mask'], $rs[0]['id']);
               else
                 $this->_returnedRole = null;
             }
+            
+            return $this->_returnedRole;
           }
           catch(PDOException $e)
           {

@@ -34,14 +34,23 @@ class DummyUser
   
 class PermissionsEngine
 {
-  public function requestPermissionForOperation($projectContext, $requestingUserID, $intendedObjectID, $intendedTable, $intendedOperation)
+  public function requestPermissionForOperation($projectContext, $requestingUserID, $intendedObjectID, $intendedTable, $intendedOperation,$roll)
   { 
     
-    $rolesMapper = new RolesObjectMapper($projectContext, $requestingUserID);
-      
+    $rolesMapper = $roll;//new RolesObjectMapper($projectContext, $requestingUserID);
     if($rolesMapper !== null)
     {
-      return true === ((($intendedOperation & $rolesMapper->getValue()) == $intendedOperation) || (($rolesMapper->getValue() & P_FULL_CONTROL)));
+      
+      $v = ((($intendedOperation & $rolesMapper->getValue()) == $intendedOperation) || ((P_FULL_CONTROL & $rolesMapper->getValue()) == P_FULL_CONTROL));
+      if(0)
+      {
+      echo 'Intended Operation: '.$intendedOperation.'<br />';
+      echo 'Current Allowed   : '.$rolesMapper->getValue().'<br />';
+      echo '               AND: '.($intendedOperation & $rolesMapper->getValue()).'<br />';
+      echo '               XOR: '.($intendedOperation ^ $rolesMapper->getValue()).'<br />';    
+      echo '             FINAL: '.(($intendedOperation & $rolesMapper->getValue()) == $intendedOperation ? "Equal" : "Not Equal").'<br /><br />';
+      }
+      return true === $v; 
     }
     else
     {
