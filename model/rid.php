@@ -1,23 +1,107 @@
 <?php
-class RoleObject
+  
+class RoleInformationModel
 {
+  /* From the ROLES Table */
+  protected $_id;
+  protected $_projectID;
+  protected $_rolename;
+  protected $_value;
+  protected $_action;
+
+  public function __construct($id, $projectID, $roleName, $value, $action = null)
+  {
+    $this->_id = $id;
+    $this->_projectID = $projectID;
+    $this->_rolename = $roleName;
+    $this->_value = intval($value);
+    $this->_action = $action;
+  }
+
+  public function getID()
+  {
+    return $this->_id;
+  }
+  
+  public function getProjectID()
+  {
+    return $this->_projectID;
+  }
+  
+  public function getRoleName()
+  {
+    return $this->_rolename;
+  }
+  
+  public function getValue()
+  {
+    return $this->_value;
+  }
+  
+  public function getAction()
+  {
+    return $this->_action;
+  }   
+  
+}
+
+class RoleMappingModel
+{
+  /* From the PermRoles Table */
   protected $_id;
   protected $_userID;
   protected $_projectID;
-  protected $_role;
-  protected $_value;
+  protected $_roleID;
   protected $_action;
   
-  public function __construct($id, $userID, $projectID, $roleName, $value)
+  public function __construct($id, $userID, $projectID, $relatedRoleID, $action = null)
   {
     $this->_id = $id;
+    $this->_userID = $userID;
+    $this->_projectID = $projectID;
+    $this->_roleID = $roleName;
+    $this->_action = $action;
+  }
+  
+  public function getID()
+  {
+    return $this->_id;
+  }
+      
+  public function getUserID()
+  {
+    return $this->_userID;
+  }
+  
+  public function getProjectID()
+  {
+    return $this->_projectID;
+  }
+  
+  public function getRoleID()
+  {
+    return $this->_roleID;
+  }
+  
+  public function getAction()
+  {
+    return $this->_action;
+  }  
+}
+
+  
+class RoleObject
+{
+    
+  public function __construct($userID, $projectID, $roleName, $value, $roleID)
+  {
+    $this->_id = $roleID;
     $this->_userID = $userID;
     $this->_projectID = $projectID;
     $this->_role = $roleName;
     $this->_value = intval($value);
     $this->_action = 0;
   }
-
   public function getID()
   {
     return $this->_id;
@@ -45,7 +129,7 @@ class RoleObject
   
   public function setAction($anAction)
   {
-    if( (($this->_value & P_CHANGE_ACCESS) || ($this->_id == NULL))
+    if( (($this->_value & (P_FULL_CONTROL | P_CHANGE_ACCESS)) || ($this->_id == NULL))
         && ($anAction >= P_ACCESS_MIN)
         && ($anAction <= P_ACCESS_MAX)
     )
@@ -57,7 +141,6 @@ class RoleObject
     return $this->_action;
   }
 }
-
 
 class RolesObjectMapper extends DatabaseAdaptor
 {
@@ -139,6 +222,7 @@ class RolesObjectMapper extends DatabaseAdaptor
     
     /* Modifying a new role */
     if($newPermissions->getAction() & P_ACCESS_UPDATE){
+      
       $stmt = $this->dbh->prepare("UPDATE `Roles` SET `name` = :name, `priv_bit_mask` = :value WHERE `projectid` = :pid AND `id` = :id");
       
       $stmt->bindValue(':value', $newPermissions->getValue());
@@ -155,6 +239,7 @@ class RolesObjectMapper extends DatabaseAdaptor
       }
       else
       {
+        print_r($stmt->errorInfo());
         return false;
       }
     
@@ -182,7 +267,7 @@ class RolesObjectMapper extends DatabaseAdaptor
     
     /* MODIFY an existing permission */
     if(($newPermissions->getAction() & P_ACCESS_UPDATE) == P_ACCESS_UPDATE){
-      $stmt = $this->dbh->prepare("UPDATE `PermRoles` SET `role` = :rid `WHERE `projectid` = :pid AND `userid` = :uid");
+      $stmt = $this->dbh->prepare("UPDATE `PermRoles` SET `role` = :rid WHERE `projectid` = :pid AND `userid` = :uid");
       $stmt->bindValue(':rid', intval($newPermissions->getID()));
     }
   
@@ -197,7 +282,6 @@ class RolesObjectMapper extends DatabaseAdaptor
       }
       else
       {
-        print_r( $stmt->errorInfo() );
         return false;
       }
     
