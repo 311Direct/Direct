@@ -97,8 +97,11 @@ class PermissionsEngine
   
   private function doChangePermissions($roleObject, $permsObject, $intendedPerms)
   {
+    if($rolesMapper instanceof RolesObjectMapper)
+        $rolesMapper = $rolesMapper->getRoleInfo();
+        
     /* Check we have permission */
-    if(!canCompleteOperation($projectContext, $requestingUserID, $intendedObjectID, $intendedTable, P_CHANGE_ACCESS))
+    if(!canCompleteOperation($roleObject->getProjectID(), $roleObject->getUserID(), $intendedObjectID, $intendedTable, P_CHANGE_ACCESS))
       return false;
       
     if($intendedTable = "Role")
