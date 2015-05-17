@@ -1,5 +1,6 @@
 <?php
   
+/* The model for PermRoles table */
 class RoleInformationModel
 {
   /* From the ROLES Table */
@@ -45,6 +46,7 @@ class RoleInformationModel
   
 }
 
+/* The model for PermMappings table */
 class RoleMappingModel
 {
   /* From the PermMappings Table */
@@ -93,6 +95,7 @@ class RoleMappingModel
   }
 }
 
+/* Should be the only externally used class 99% of the time */
 class RoleObject
 {
     
@@ -137,6 +140,8 @@ class RoleObject
   }
 }
 
+
+/* Connects to our DB and gets the required information */
 class RolesObjectMapper extends DatabaseAdaptor
 {
 
@@ -292,5 +297,86 @@ class RolesObjectMapper extends DatabaseAdaptor
   public function getRoleInfo()
   {
     return $this->_returnedRole;
+  }
+}
+
+
+/* Connects to PermRoles and gets the roles with an associated user */
+class RolePermissionModel
+{
+  protected $_id;
+  protected $_roleMappingID;
+  protected $_table;
+  protected $_oid;
+  
+  public function __construct($id, $roleMappingID, $tableName, $objectID)
+  {
+    $this->_id = $id;
+    $this->_roleMappingID = $roleMappingID;
+    $this->_table = $tableName;
+    $this->_oid = $objectID;
+  }
+  
+  public function getRolePermissionID()
+  {
+    return $this->_id;
+  }
+  
+  public function getRolePermissionMappingID()
+  {
+    return $this->_roleMappingID;
+  }
+  
+  public function getTableName()
+  {
+    return $this->_table;
+  }
+  
+  public function getObjectID()
+  {
+    return $this->_oid;
+  }
+}
+
+class RolePermissionMapper extends DatabaseAdaptor
+{
+  private $_roleModel;
+  
+  public function __construct($roleID, $table, $objectID)
+  {
+    parent::__construct();
+    $stmt = $this->dbh->prepare("SELECT * FROM `PermRoles` WHERE `rolemappingid` = :mid AND `table` = :tid AND `oid` = :oid");    
+  
+    $stmt->bindParam(':mid', $roleID);
+    $stmt->bindParam(':tid', $table);
+    $stmt->bindParam(':oid', $objectID);
+    
+    try
+    {
+      if($stmt->execute()){
+        $possibleMatches = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        if(count($possibleMatches) > 1)
+          JSONResponse::printErrorResponseWithHeader("The requested role had more than one entry on the requested object. Please fix!");
+          
+        if(count($possibleMatches) < 0)
+          return null;
+          
+        if(count($possibleMatches) == 1)
+          $_this->roleModel = new RolePermissionModel($possibleMatches[0]['id'], $roleID, $table, $objectID);
+      }
+      else
+      {
+        JSONResponse::printErrorResponseWithHeader("Unable to load Roles for this transaction. Aborting operation...");
+      }    
+  
+    } catch(PDOException $e)
+    {
+      print_r($e); die();
+    }
+  }
+  public function getRoleModel()
+  {
+    return $this->_roleModel;
   }
 }
