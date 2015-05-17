@@ -15,7 +15,7 @@ class PermissionsEngine
   
   public function requestPermissionForOperationWithObjects($rolesObject, $intendedPermissionsObject, $intendedOperation)
   { 
-    return canCompleteOperation($rolesObject, $intendedPermissionsObject, $intendedOperation);    
+    return $this->canCompleteOperation($rolesObject, $intendedPermissionsObject, $intendedOperation);    
   }
   
   public function requestPermissionForOperationWithUserObject($rolesObject, $intendedObjectID, $intendedTable, $intendedOperation)
