@@ -83,7 +83,6 @@ class PermissionsObjectMapper extends DatabaseAdaptor
           $newObj = new PermissionObject($object['id'], $object['userid'], $object['table'], $object['oid'], intval($object['value']));
           $this->_permObjs[] = $newObj;
         }
-          return $this->_permObjs;
       }
       else
       {
