@@ -98,7 +98,7 @@ class RoleObject
     
   public function __construct($userID, $projectID, $relatedRoleID, $roleName, $roleValue)
   {
-    $this->_mappedModel = new RoleMappingModel($userID, $projectID, $relatedRoleID, null);
+    $this->_mappedModel = new RoleMappingModel($projectID, $userID, $relatedRoleID, null);
     $this->_mappedInfo = new RoleInformationModel($relatedRoleID, $projectID, $roleName, $roleValue, null);
   }
   public function getID()
