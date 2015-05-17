@@ -96,4 +96,9 @@ class PermissionsObjectMapper extends DatabaseAdaptor
     }
   }
   
+  public function getPermissionObjects()
+  {
+    return $this->_permObjs;
+  }
+  
 }
