@@ -34,30 +34,36 @@ class DummyUser
   
 class PermissionsEngine
 {
-  public function requestPermissionForOperation($projectContext, $requestingUserID, $intendedObjectID, $intendedTable, $intendedOperation,$roll=null)
+  public function requestPermissionForOperation($projectContext, $requestingUserID, $intendedObjectID, $intendedTable, $intendedOperation)
   { 
+    $rolesObject = new RolesObjectMapper($projectContext, $requestingUserID);
+    $permsObject = new PermissionsObjectMapper($intendedObjectID, $intendedTable, $rolesObject->getRoleInfo()->getUserID());
     
-    $rolesMapper = ($roll === null ? new RolesObjectMapper($projectContext, $requestingUserID) : $roll);
+    return $this->canCompleteOperation($rolesObject, $permsObject, $intendedOperation);   
+  }
+  
+  public function requestPermissionForOperationWithObjects($rolesObject, $intendedPermissionsObject, $intendedOperation)
+  { 
+    return canCompleteOperation($rolesObject, $intendedPermissionsObject, $intendedOperation);    
+  }
+  
+  public function requestPermissionForOperationWithUserObject($rolesObject, $intendedObjectID, $intendedTable, $intendedOperation)
+  {
+    if($rolesMapper instanceof RolesObjectMapper)
+        $rolesMapper = $rolesMapper->getRoleInfo();
+        
+    $permsObject = new PermissionsObjectMapper($intendedObjectID, $intendedTable, $rolesObject->getUserID());
+    return $this->canCompleteOperation($rolesObject, $permsObject, $intendedOperation);
+  }
+  
+  private function canCompleteOperation($rolesMapper, $intendedPermissionsObject, $intendedOperation)
+  {
     if($rolesMapper !== null)
     {
       if($rolesMapper instanceof RolesObjectMapper)
-      {
-          $rolesMapper2 = $rolesMapper->getRoleInfo();
-          $rolesMapper = null;
-          $rolesMapper = $rolesMapper2;
-          $rolesMapper2 = null;
-      }        
-        
-      $v = ((($intendedOperation & $rolesMapper->getValue()) == $intendedOperation) || ((P_FULL_CONTROL & $rolesMapper->getValue()) == P_FULL_CONTROL));
-      if(0)
-      {
-      echo 'Intended Operation: '.$intendedOperation.'<br />';
-      echo 'Current Allowed   : '.$rolesMapper->getValue().'<br />';
-      echo '               AND: '.($intendedOperation & $rolesMapper->getValue()).'<br />';
-      echo '               XOR: '.($intendedOperation ^ $rolesMapper->getValue()).'<br />';    
-      echo '             FINAL: '.(($intendedOperation & $rolesMapper->getValue()) == $intendedOperation ? "Equal" : "Not Equal").'<br /><br />';
-      }
-      return true === $v; 
+          $rolesMapper = $rolesMapper->getRoleInfo();
+                
+      return true === ((($intendedOperation & $rolesMapper->getValue()) == $intendedOperation) || ((P_FULL_CONTROL & $rolesMapper->getValue()) == P_FULL_CONTROL));
     }
     else
     {
@@ -74,13 +80,25 @@ class PermissionsEngine
         
       }
     }
-        
   }
-  
+  public function changePermissionsForObjectWithObjects($requestingRoleObject, $intendedPermissionsObject, $intendedPermissions)
+  {
+    return doChangePermissions($requestingRoleObject, $intendedPermissionsObject, $intendedPermissions);
+  }
+          
   public function changePermissionsForObject($projectContext, $requestingUserID, $intendedObjectID, $intendedTable, $intendedPermissions)
   {
+    $roleObject = new RolesObjectMapper($projectContext, $requestingUserID);
+    $permsObject = new PermissionsObjectMapper($intendedObjectID, $intendedTable, $roleObject->getUserID());
+    
+    return $this->doChangePermissions($rolesObject, $permsObject, $intendedPermissions);
+     
+  } 
+  
+  private function doChangePermissions($roleObject, $permsObject, $intendedPerms)
+  {
     /* Check we have permission */
-    if(!requestPermissionForOperation($projectContext, $requestingUserID, $intendedObjectID, $intendedTable, P_CHANGE_ACCESS))
+    if(!canCompleteOperation($projectContext, $requestingUserID, $intendedObjectID, $intendedTable, P_CHANGE_ACCESS))
       return false;
       
     if($intendedTable = "Role")
@@ -89,6 +107,5 @@ class PermissionsEngine
       
       $rolesMapper->updateRolePermissions($aNew);
     } 
-     
-  }  
+  }
 }
