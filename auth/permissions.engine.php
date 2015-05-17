@@ -34,13 +34,20 @@ class DummyUser
   
 class PermissionsEngine
 {
-  public function requestPermissionForOperation($projectContext, $requestingUserID, $intendedObjectID, $intendedTable, $intendedOperation,$roll)
+  public function requestPermissionForOperation($projectContext, $requestingUserID, $intendedObjectID, $intendedTable, $intendedOperation,$roll=null)
   { 
     
-    $rolesMapper = $roll;//new RolesObjectMapper($projectContext, $requestingUserID);
+    $rolesMapper = ($roll === null ? new RolesObjectMapper($projectContext, $requestingUserID) : $roll);
     if($rolesMapper !== null)
     {
-      
+      if($rolesMapper instanceof RolesObjectMapper)
+      {
+          $rolesMapper2 = $rolesMapper->getRoleInfo();
+          $rolesMapper = null;
+          $rolesMapper = $rolesMapper2;
+          $rolesMapper2 = null;
+      }        
+        
       $v = ((($intendedOperation & $rolesMapper->getValue()) == $intendedOperation) || ((P_FULL_CONTROL & $rolesMapper->getValue()) == P_FULL_CONTROL));
       if(0)
       {

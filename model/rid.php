@@ -54,20 +54,15 @@ class RoleMappingModel
   protected $_roleID;
   protected $_action;
   
-  public function __construct($id, $userID, $projectID, $relatedRoleID, $action = null)
+  public function __construct($userID, $projectID, $relatedRoleID, $action = null, $id = null)
   {
     $this->_id = $id;
     $this->_userID = $userID;
     $this->_projectID = $projectID;
-    $this->_roleID = $roleName;
+    $this->_roleID = $relatedRoleID;
     $this->_action = $action;
   }
   
-  public function getID()
-  {
-    return $this->_id;
-  }
-      
   public function getUserID()
   {
     return $this->_userID;
@@ -87,45 +82,6 @@ class RoleMappingModel
   {
     return $this->_action;
   }  
-}
-
-  
-class RoleObject
-{
-    
-  public function __construct($userID, $projectID, $roleName, $value, $roleID)
-  {
-    $this->_id = $roleID;
-    $this->_userID = intval($userID);
-    $this->_projectID = intval($projectID);
-    $this->_role = $roleName;
-    $this->_value = intval($value);
-    $this->_action = 0;
-  }
-  public function getID()
-  {
-    return $this->_userID;
-  }
-      
-  public function getUserID()
-  {
-    return $this->_userID;
-  }
-  
-  public function getProjectID()
-  {
-    return $this->_projectID;
-  }
-  
-  public function getRole()
-  {
-    return $this->_role;
-  }
-  
-  public function getValue()
-  {
-    return $this->_value;
-  }    
   
   public function setAction($anAction)
   {
@@ -135,10 +91,50 @@ class RoleObject
     )
     {  $this->_action = $anAction; }
   }
+}
+
   
+class RoleObject
+{
+    
+  public function __construct($userID, $projectID, $relatedRoleID, $roleName, $roleValue)
+  {
+    $this->_mappedModel = new RoleMappingModel($userID, $projectID, $relatedRoleID, null);
+    $this->_mappedInfo = new RoleInformationModel($relatedRoleID, $projectID, $roleName, $roleValue, null);
+  }
+  public function getID()
+  {
+    return $this->_mappedModel->_userID;
+  }
+      
+  public function getUserID()
+  {
+    return $this->_mappedModel->getUserID();
+  }
+  
+  public function getProjectID()
+  {
+    return $this->_mappedModel->getProjectID();
+  }
+  
+  public function getRoleID()
+  {
+    return $this->_mappedModel->getRoleID();
+  }
+  
+  public function getRoleName()
+  {
+    return $this->_mappedInfo->getRoleName();
+  }
+  
+  public function getValue()
+  {
+    return $this->_mappedInfo->getValue();
+  }   
+    
   public function getAction()
   {
-    return $this->_action;
+    return null;
   }
 }
 
@@ -179,7 +175,7 @@ class RolesObjectMapper extends DatabaseAdaptor
             {
               $rs = $rstmt->fetchAll(PDO::FETCH_ASSOC); 
               if(count($rs) == 1)
-                $this->_returnedRole = new RoleObject($userID, $projectID, $rs[0]['rolename'], $rs[0]['priv_bit_mask'], $rs[0]['id']);
+                $this->_returnedRole = new RoleObject($userID, $projectID, $rs[0]['id'], $rs[0]['rolename'], $rs[0]['priv_bit_mask']);
               else
                 $this->_returnedRole = null;
             }
