@@ -54,7 +54,7 @@ class RoleMappingModel
   protected $_roleID;
   protected $_action;
   
-  public function __construct($userID, $projectID, $relatedRoleID, $action = null, $id = null)
+  public function __construct($projectID, $userID, $relatedRoleID, $action = null, $id = null)
   {
     $this->_id = $id;
     $this->_userID = $userID;
@@ -93,7 +93,6 @@ class RoleMappingModel
   }
 }
 
-  
 class RoleObject
 {
     
