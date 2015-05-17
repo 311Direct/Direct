@@ -47,7 +47,7 @@ class RoleInformationModel
 
 class RoleMappingModel
 {
-  /* From the PermRoles Table */
+  /* From the PermMappings Table */
   protected $_id;
   protected $_userID;
   protected $_projectID;
@@ -146,7 +146,7 @@ class RolesObjectMapper extends DatabaseAdaptor
   {
     parent::__construct();
   
-    $stmt = $this->dbh->prepare("SELECT * FROM `PermRoles` WHERE `projectid` = :pid AND `userid` = :uid");    
+    $stmt = $this->dbh->prepare("SELECT * FROM `PermMappings` WHERE `projectid` = :pid AND `userid` = :uid");    
   
     $stmt->bindParam(':pid', $projectID);
     $stmt->bindParam(':uid', $userID);
@@ -254,17 +254,17 @@ class RolesObjectMapper extends DatabaseAdaptor
       
     /* ADD a new permission */
     if(($newPermissions->getAction() & P_ACCESS_ADD) == P_ACCESS_ADD){
-      $stmt = $this->dbh->prepare("INSERT INTO `PermRoles` VALUES (NULL, :uid, :pid, :rid)");
+      $stmt = $this->dbh->prepare("INSERT INTO `PermMappings` VALUES (NULL, :uid, :pid, :rid)");
       $stmt->bindValue(':rid', intval($newPermissions->getID()));
     }
     
     /* DELETE an existing permission */
     if(($newPermissions->getAction() & P_ACCESS_DELETE) == P_ACCESS_DELETE)
-      $stmt = $this->dbh->prepare("DELETE FROM `PermRoles` WHERE `projectid` = :pid AND `userid` = :uid"); 
+      $stmt = $this->dbh->prepare("DELETE FROM `PermMappings` WHERE `projectid` = :pid AND `userid` = :uid"); 
     
     /* MODIFY an existing permission */
     if(($newPermissions->getAction() & P_ACCESS_UPDATE) == P_ACCESS_UPDATE){
-      $stmt = $this->dbh->prepare("UPDATE `PermRoles` SET `role` = :rid WHERE `projectid` = :pid AND `userid` = :uid");
+      $stmt = $this->dbh->prepare("UPDATE `PermMappings` SET `role` = :rid WHERE `projectid` = :pid AND `userid` = :uid");
       $stmt->bindValue(':rid', intval($newPermissions->getID()));
     }
   
