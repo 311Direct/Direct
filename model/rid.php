@@ -1,7 +1,7 @@
 <?php
   
-/* The model for PermRoles table */
-class RoleInformationModel
+/* The model for PermRolesToObjectMappings table */
+class PermRolesToObjectMappingsModel
 {
   /* From the ROLES Table */
   protected $_id;
@@ -46,8 +46,8 @@ class RoleInformationModel
   
 }
 
-/* The model for PermMappings table */
-class RoleMappingModel
+/* The model for PermAssignmentMappings table */
+class PermAssignementMappingModel
 {
   /* From the PermMappings Table */
   protected $_id;
@@ -96,13 +96,13 @@ class RoleMappingModel
 }
 
 /* Should be the only externally used class 99% of the time */
-class RoleObject
+class PermissionRole
 {
     
   public function __construct($userID, $projectID, $relatedRoleID, $roleName, $roleValue)
   {
-    $this->_mappedModel = new RoleMappingModel($projectID, $userID, $relatedRoleID, null);
-    $this->_mappedInfo = new RoleInformationModel($relatedRoleID, $projectID, $roleName, $roleValue, null);
+    $this->_mappedModel = new PermRolesToObjectMappingsModel()($projectID, $userID, $relatedRoleID, null);
+    $this->_mappedInfo = new PermAssignementMappingModel($relatedRoleID, $projectID, $roleName, $roleValue, null);
   }
   public function getID()
   {
@@ -140,18 +140,16 @@ class RoleObject
   }
 }
 
-
 /* Connects to our DB and gets the required information */
-class RolesObjectMapper extends DatabaseAdaptor
+class PermissionRoleMapper extends DatabaseAdaptor
 {
-
   private $_returnedRole;
   
   public function __construct($projectID, $userID)
   {
     parent::__construct();
   
-    $stmt = $this->dbh->prepare("SELECT * FROM `PermMappings` WHERE `projectid` = :pid AND `userid` = :uid");    
+    $stmt = $this->dbh->prepare("SELECT * FROM `PermAssignmentMappings` WHERE `projectid` = :pid AND `userid` = :uid");    
   
     $stmt->bindParam(':pid', $projectID);
     $stmt->bindParam(':uid', $userID);
@@ -179,7 +177,7 @@ class RolesObjectMapper extends DatabaseAdaptor
             {
               $rs = $rstmt->fetchAll(PDO::FETCH_ASSOC); 
               if(count($rs) == 1)
-                $this->_returnedRole = new RoleObject($userID, $projectID, $rs[0]['id'], $rs[0]['rolename'], $rs[0]['priv_bit_mask']);
+                $this->_returnedRole = new PermissionRole($userID, $projectID, $rs[0]['id'], $rs[0]['rolename'], $rs[0]['priv_bit_mask']);
               else
                 $this->_returnedRole = null;
             }
@@ -300,7 +298,6 @@ class RolesObjectMapper extends DatabaseAdaptor
   }
 }
 
-
 /* Connects to PermRoles and gets the roles with an associated user */
 class RolePermissionModel
 {
@@ -338,14 +335,14 @@ class RolePermissionModel
   }
 }
 
-class RolePermissionMapper extends DatabaseAdaptor
+class RolePermissionModelMapper extends DatabaseAdaptor
 {
   private $_roleModel;
   
   public function __construct($roleID, $table, $objectID)
   {
     parent::__construct();
-    $stmt = $this->dbh->prepare("SELECT * FROM `PermRoles` WHERE `rolemappingid` = :mid AND `table` = :tid AND `oid` = :oid");    
+    $stmt = $this->dbh->prepare("SELECT * FROM `PermRolesToObjectMappings` WHERE `rolemappingid` = :mid AND `table` = :tid AND `oid` = :oid");    
   
     $stmt->bindParam(':mid', $roleID);
     $stmt->bindParam(':tid', $table);
