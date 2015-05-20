@@ -2,6 +2,29 @@
  
 class PermissionsEngine
 {
+  
+  /**
+    @param int $projectContext
+    The ID of the current project we are working on 
+    
+    @param int $requestingUserID
+    The ID of ths user that is requesting to change permissions
+    
+    @param int $intendedObjectID
+    The ID of the object that will be changed after the operation
+    
+    @param string $intendedTable
+    The string name of the table where $intendedObjectID lies
+    
+    @param PERMISSION_TYPE $intendedOperation
+    The P_* permission that will overwrite the intended object
+    
+    @return TRUE 
+    If the requesting user does not have permission to change the object
+    
+    @return FALSE 
+    If the requesting user has permission AND the object update succeeds
+  */ 
   public function requestPermissionForOperation($projectContext, $requestingUserID, $intendedObjectID, $intendedTable, $intendedOperation)
   { 
     $rolesObject = new RolesObjectMapper($projectContext, $requestingUserID);
@@ -13,11 +36,36 @@ class PermissionsEngine
     return $this->canCompleteOperation($rolesObject, $permsObject, $intendedOperation);   
   }
   
+  
+   /** 
+    @param RoleObject $rolesObject
+    The RoleObject that would like to perform the operation
+    
+    @param int $intendedPermissionsObject
+    The PermissionObject that will be have the operation applied to it.
+        
+    @param PERMISSIONS_TYPE $intendedOperation
+    The operation that will be performed; will accept a binary OR (|)
+    */  
   public function requestPermissionForOperationWithObjects($rolesObject, $intendedPermissionsObject, $intendedOperation)
   { 
     return $this->canCompleteOperation($rolesObject, $intendedPermissionsObject, $intendedOperation);    
   }
-  
+    
+  /** 
+    @param RoleObject $rolesObject
+    The RoleObject that would like to perform the operation
+    
+    @param int $intendedObjectID
+    The ID of the object that will have an operation performed on it.
+    
+    @param string $intendedTable
+    The table where the $intendedObjectID lies
+    
+    @param PERMISSIONS_TYPE $intendedOperation
+    The operation that will be performed; will accept a binary OR (|)
+    
+    */    
   public function requestPermissionForOperationWithUserObject($rolesObject, $intendedObjectID, $intendedTable, $intendedOperation)
   {
     if($rolesMapper instanceof RolesObjectMapper)
@@ -27,6 +75,9 @@ class PermissionsEngine
     return $this->canCompleteOperation($rolesObject, $permsObject, $intendedOperation);
   }
   
+  /**
+    This is a private operation that cannot be directly accessed.
+  */  
   private function canCompleteOperation($rolesMapper, $intendedPermissionsObject, $intendedOperation)
   {
     if($rolesMapper !== null)
@@ -52,12 +103,51 @@ class PermissionsEngine
       }
     }
   }
-  
+    
+  /**
+    @param RoleObject $requestingRoleObject
+    The RoleObject of the user who is requesting permission to change Permission
+    
+    @param PermissionObject $intendedPermissionsObject
+    The PermissionObject that will have its permissions changed
+    
+    @param PERMISSION_TYPE $intendedPermissions
+    The P_* value of the permissions that will be written to the object.
+    
+    @return FALSE
+    If the user does not have permission to complete the operation
+    
+    @return TRUE
+    If the user has P_CHANGE_ACCESS permissions AND the operation is successful.
+  */
   public function changePermissionsForObjectWithObjects($requestingRoleObject, $intendedPermissionsObject, $intendedPermissions)
   {
     return doChangePermissions($requestingRoleObject, $intendedPermissionsObject, $intendedPermissions);
   }
-          
+  
+  
+  /**
+    @param int $projectContext
+    The ID of the current project we are working on 
+    
+    @param int $requestingUserID
+    The ID of ths user that is requesting to change permissions
+    
+    @param int $intendedObjectID
+    The ID of the object that will be changed after the operation
+    
+    @param string $intendedTable
+    The string name of the table where $intendedObjectID lies
+    
+    @param PERMISSION_TYPE $intendedPermissions
+    The P_* permission that will overwrite the intended object
+    
+    @return TRUE 
+    If the requesting user does not have permission to change the object
+    
+    @return FALSE 
+    If the requesting user has permission AND the object update succeeds
+  */          
   public function changePermissionsForObject($projectContext, $requestingUserID, $intendedObjectID, $intendedTable, $intendedPermissions)
   {
     $roleObject = new RolesObjectMapper($projectContext, $requestingUserID);
@@ -66,13 +156,22 @@ class PermissionsEngine
     return $this->doChangePermissions($rolesObject, $permsObject, $intendedPermissions);
   } 
   
+  
+  public function changePermissionsForRole($projectContext, $requestingUserID, $intendedRoleInformationModel, $intendedPermissions)
+  {
+    
+  }
+    
+  /**
+     This is a private function that cannot be directly accessed
+  */
   private function doChangePermissions($roleObject, $permsObject, $intendedPerms)
   {
     if($rolesMapper instanceof RolesObjectMapper)
         $rolesMapper = $rolesMapper->getRoleInfo();
         
     /* Check we have permission */
-    if(!canCompleteOperation($roleObject->getProjectID(), $roleObject->getUserID(), $intendedObjectID, $intendedTable, P_CHANGE_ACCESS))
+    if(!canCompleteOperation($rolesMapper, $permsObject, P_CHANGE_ACCESS))
       return false;
       
     if($intendedTable = "Role")
@@ -80,5 +179,10 @@ class PermissionsEngine
       $rolesMapper = new RolesObjectMapper($projectContext, $requestingUserID);
       $rolesMapper->updateRolePermissions($aNew);
     } 
+    else
+    {
+      
+    }
+    
   }
 }
