@@ -149,57 +149,94 @@ class PermissionRoleMapper extends DatabaseAdaptor
   {
     parent::__construct();
   
-    $stmt = $this->dbh->prepare("SELECT * FROM `PermAssignmentMappings` WHERE `projectid` = :pid AND `userid` = :uid");    
-  
-    $stmt->bindParam(':pid', $projectID);
-    $stmt->bindParam(':uid', $userID);
-    
-    try
+    if($userID != 0)
     {
-      if($stmt->execute()){
-        $possibleMatches = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        if(count($possibleMatches) > 1)
-          JSONResponse::printErrorResponseWithHeader("The user and project specified had multiple roles!");
+      $stmt = $this->dbh->prepare("SELECT * FROM `PermAssignmentMappings` WHERE `projectid` = :pid AND `userid` = :uid");    
+  
+      $stmt->bindParam(':pid', $projectID);
+      $stmt->bindParam(':uid', $userID);
+      
+      try
+      {
+        if($stmt->execute()){
+          $possibleMatches = $stmt->fetchAll(PDO::FETCH_ASSOC);
           
-        if(count($possibleMatches) < 1)
-          return null;
-          
-        if(count($possibleMatches) == 1)
-        {
-          $roleID = $possibleMatches[0]['role'];
-          $rstmt = $this->dbh->prepare("SELECT * FROM `Roles` WHERE `id` = :id");
-          $rstmt->bindParam(':id', $roleID);
-          
-          try
+          if(count($possibleMatches) > 1)
+            JSONResponse::printErrorResponseWithHeader("The user and project specified had multiple roles!");
+            
+          if(count($possibleMatches) < 1)
+            return null;
+            
+          if(count($possibleMatches) == 1)
           {
-            if($rstmt->execute())
+            $roleID = $possibleMatches[0]['role'];
+            $rstmt = $this->dbh->prepare("SELECT * FROM `Roles` WHERE `id` = :id");
+            $rstmt->bindParam(':id', $roleID);
+            
+            try
             {
-              $rs = $rstmt->fetchAll(PDO::FETCH_ASSOC); 
-              if(count($rs) == 1)
-                $this->_returnedRole = new PermissionRole($userID, $projectID, $rs[0]['id'], $rs[0]['rolename'], $rs[0]['priv_bit_mask']);
-              else
-                $this->_returnedRole = null;
+              if($rstmt->execute())
+              {
+                $rs = $rstmt->fetchAll(PDO::FETCH_ASSOC); 
+                if(count($rs) == 1)
+                  $this->_returnedRole = new PermissionRole($userID, $projectID, $rs[0]['id'], $rs[0]['rolename'], $rs[0]['priv_bit_mask']);
+                else
+                  $this->_returnedRole = null;
+              }
+              
+              return $this->_returnedRole;
+            }
+            catch(PDOException $e)
+            {
+              JSONResponse::printErrorResponseWithHeader("Unable to load roles - fatal database error: ".$e);
             }
             
-            return $this->_returnedRole;
           }
-          catch(PDOException $e)
-          {
-            JSONResponse::printErrorResponseWithHeader("Unable to load roles - fatal database error: ".$e);
-          }
-          
         }
+        else
+        {
+          JSONResponse::printErrorResponseWithHeader("Unable to load Roles for this transaction. Aborting operation...");
+        }    
       }
-      else
+      catch(PDOException $e)
       {
-        JSONResponse::printErrorResponseWithHeader("Unable to load Roles for this transaction. Aborting operation...");
-      }    
+        JSONResponse::printErrorResponseWithHeader("Unable to load roles - fatal database error: ".$e);
+      }      
     }
-    catch(PDOException $e)
+    
+    if($userID == 0)
     {
-      JSONResponse::printErrorResponseWithHeader("Unable to load roles - fatal database error: ".$e);
+      $stmt = $this->dbh->prepare("SELECT `projectid`,`everyonepermissions` FROM `PermProjectDefaults` WHERE `projectid` = :pid LIMIT 1");    
+  
+      $stmt->bindParam(':pid', $projectID);
+      
+      try
+      {
+        if($stmt->execute()){
+          $possibleMatches = $stmt->fetch(PDO::FETCH_ASSOC);
+          
+          if(count($possibleMatches) != 1)
+            JSONResponse::printErrorResponseWithHeader("This project does not have an everyone permission set. Please run the Permissions Doctor or inform your system administrator. Project Context: $projectID");
+
+          if(count($possibleMatches) == 1)
+          {
+            $this->_returnedRole = new PermissionRole($userID, $projectID, NULL, "Everyone", $rs['everyonepermissions']);
+            return $this->_returnedRole;                      
+          }
+        }
+        else
+        {
+          JSONResponse::printErrorResponseWithHeader("Unable to load Roles for this transaction. Aborting operation...");
+        }    
+      }
+      catch(PDOException $e)
+      {
+        JSONResponse::printErrorResponseWithHeader("Unable to load roles - fatal database error: ".$e);
+      }
     }
+  
+    
+    
   }
   
   
@@ -342,7 +379,7 @@ class RolePermissionModelMapper extends DatabaseAdaptor
   public function __construct($roleID, $table, $objectID)
   {
     parent::__construct();
-    $stmt = $this->dbh->prepare("SELECT * FROM `PermRolesToObjectMappings` WHERE `rolemappingid` = :mid AND `table` = :tid AND `oid` = :oid");    
+    $stmt = $this->dbh->prepare("SELECT * FROM `PermRolesToObjectMappings` WHERE `rolemappingid` = :mid AND `table` = :tid AND `oid` = :oid LIMIT 1");    
   
     $stmt->bindParam(':mid', $roleID);
     $stmt->bindParam(':tid', $table);
@@ -351,16 +388,13 @@ class RolePermissionModelMapper extends DatabaseAdaptor
     try
     {
       if($stmt->execute()){
-        $possibleMatches = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $possibleMatches = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        if(count($possibleMatches) > 1)
-          JSONResponse::printErrorResponseWithHeader("The requested role had more than one entry on the requested object. Please fix!");
-          
-        if(count($possibleMatches) < 0)
-          return null;
+        if(count($possibleMatches) != 1)
+          JSONResponse::printErrorResponseWithHeader("The requested role had zero or more than one entry on the requested object. Please run Permissions Doctor to resolve.");
           
         if(count($possibleMatches) == 1)
-          $_this->roleModel = new RolePermissionModel($possibleMatches[0]['id'], $roleID, $table, $objectID);
+          $_this->roleModel = new RolePermissionModel($possibleMatches['id'], $roleID, $table, $objectID);
       }
       else
       {
