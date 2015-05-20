@@ -27,7 +27,7 @@ class PermissionsEngine
   */ 
   public function requestPermissionForOperation($projectContext, $requestingUserID, $intendedObjectID, $intendedTable, $intendedOperation)
   { 
-    $rolesObject = new RolesObjectMapper($projectContext, $requestingUserID);
+    $rolesObject = new PermissionRoleMapper($projectContext, $requestingUserID);
     if($rolesObject->getRoleInfo() === null)
       return false;
       
@@ -68,7 +68,7 @@ class PermissionsEngine
     */    
   public function requestPermissionForOperationWithUserObject($rolesObject, $intendedObjectID, $intendedTable, $intendedOperation)
   {
-    if($rolesMapper instanceof RolesObjectMapper)
+    if($rolesMapper instanceof PermissionRoleMapper)
         $rolesMapper = $rolesMapper->getRoleInfo();
         
     $permsObject = new PermissionsObjectMapper($intendedObjectID, $intendedTable, $rolesObject->getUserID());
@@ -82,7 +82,7 @@ class PermissionsEngine
   {
     if($rolesMapper !== null)
     {
-      if($rolesMapper instanceof RolesObjectMapper)
+      if($rolesMapper instanceof PermissionRoleMapper)
           $rolesMapper = $rolesMapper->getRoleInfo();
                 
       return true === ((($intendedOperation & $rolesMapper->getValue()) == $intendedOperation) || ((P_FULL_CONTROL & $rolesMapper->getValue()) == P_FULL_CONTROL));
@@ -97,7 +97,7 @@ class PermissionsEngine
       else
       {
         /* Return everybody permission from project */
-        $everyoneMapper = new RolesObjectMapper($projectContext, 0);
+        $everyoneMapper = new PermissionRoleMapper($projectContext, 0);
         return true === ((($intendedOperation & $everyoneMapper->getValue()) == $intendedOperation) || (($everyoneMapper->getValue() & P_FULL_CONTROL))); 
         
       }
@@ -150,37 +150,42 @@ class PermissionsEngine
   */          
   public function changePermissionsForObject($projectContext, $requestingUserID, $intendedObjectID, $intendedTable, $intendedPermissions)
   {
-    $roleObject = new RolesObjectMapper($projectContext, $requestingUserID);
+    $roleObject = new PermissionRoleMapper($projectContext, $requestingUserID);
     $permsObject = new PermissionsObjectMapper($intendedObjectID, $intendedTable, $roleObject->getUserID());
     
-    return $this->doChangePermissions($rolesObject, $permsObject, $intendedPermissions);
+    return $this->doChangePermissions('Object', $rolesObject, $intendedObjectID, $intendedPermissions);
   } 
   
   
   public function changePermissionsForRole($projectContext, $requestingUserID, $intendedRoleInformationModel, $intendedPermissions)
   {
+    $roleObject = new PermissionRoleMapper($projectContext, $requestingUserID);
     
+    return $this->doChangePermissions('Role', $rolesObject, $$intendedRoleInformationModel, $intendedPermissions);
   }
     
   /**
      This is a private function that cannot be directly accessed
   */
-  private function doChangePermissions($roleObject, $permsObject, $intendedPerms)
+  private function doChangePermissions($type, $roleObject, $permsObject, $intendedPerms)
   {
-    if($rolesMapper instanceof RolesObjectMapper)
+    if($rolesMapper instanceof PermissionRoleMapper)
         $rolesMapper = $rolesMapper->getRoleInfo();
         
     /* Check we have permission */
     if(!canCompleteOperation($rolesMapper, $permsObject, P_CHANGE_ACCESS))
       return false;
       
-    if($intendedTable = "Role")
+    if($type = 'Object')
     {
-      $rolesMapper = new RolesObjectMapper($projectContext, $requestingUserID);
-      $rolesMapper->updateRolePermissions($aNew);
+      $newPerms = new PermissionsObjectMapper($permsObject->getPermissionObjects()[0]->getUserID(), $permsObject->getPermissionObjects()[0]->getTable(), $permsObject->getPermissionObjects()[0]->getOID());
+      $newPerms->updateObjectPermissions($intendedPermissions);
     } 
     else
+    if($type = 'Role')
     {
+      $rolesMapper = new PermissionRoleMapper($projectContext, $requestingUserID);
+      $rolesMapper->updateRolePermissions($aNew);
       
     }
     
