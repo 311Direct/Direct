@@ -1,4 +1,8 @@
 <?php
+  
+include('../../model/roles.permission.php');
+include('../../model/mappings.permission.php');
+include('../../model/objects.permission.php');
  
 class PermissionsEngine
 {
