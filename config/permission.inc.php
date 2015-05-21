@@ -20,4 +20,9 @@ define("P_ROOT_LEVEL", 1000 + ( P_FULL_CONTROL | P_READ | P_WRITE | P_CREATE | P
 define("P_ACTION_MIN", (P_ACTION_DELETE & P_ACTION_UPDATE & P_ACTION_ADD));
 define("P_ACTION_MAX", (P_ACTION_ADD | P_ACTION_UPDATE | P_ACTION_DELETE));
 
+function noActionSet($aPerms)
+{
+  return true === ((($aPerms & P_ACTION_ADD) == P_ACTION_ADD) || (($aPerms & P_ACTION_UPDATE) == P_ACTION_UPDATE) || (($aPerms & P_ACTION_DELETE) == P_ACTION_DELETE));
+}
+
 ?>
