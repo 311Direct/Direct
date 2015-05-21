@@ -73,39 +73,77 @@ class DBPermRolesToObjectMappings extends DatabaseAdaptor
     }
     parent::__construct();
   
-    if($userID != 0)
+    $stmt = $this->dbh->prepare("SELECT * FROM `PermRolesToObjectMappings` WHERE `rolemappingid` = :rid AND `table` = :tbl AND `oid` = :objectID");    
+
+    $stmt->bindParam(':rid', $roleMappingID);
+    $stmt->bindParam(':tbl', $tableName);
+    $stmt->bindParam(':objectID', $tableOID);
+    
+    try
     {
-      $stmt = $this->dbh->prepare("SELECT * FROM `PermRolesToObjectMappings` WHERE `rolemappingid` = :rid AND `table` = :tbl AND `oid` = :objectID");    
-  
-      $stmt->bindParam(':rid', $roleMappingID);
-      $stmt->bindParam(':tbl', $tableName);
-      $stmt->bindParam(':objectID', $tableOID);
-      
-      try
-      {
-        if($stmt->execute()){
-          $possibleMatches = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      if($stmt->execute()){
+        $possibleMatches = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+        if(count($possibleMatches) > 1)
+          JSONResponse::printErrorResponseWithHeader("Multiple role mapping were found for this object. Please run Permissions Repair Doctor!");
           
-          if(count($possibleMatches) == 0)
-            JSONResponse::printErrorResponseWithHeader("There are no mappings associated with this mapping ID.");
-          
-          if(count($possibleMatches) > 1)
-            JSONResponse::printErrorResponseWithHeader("Multiple role mapping were found for this object.");
-            
-          if(count($possibleMatches) == 1)
-          {
-            $this->_returnedMapping = new PermRolesToObjectMappingsModel($roleMappingID, $tableName, $tableOID);
-            return;         
-          }        
-          JSONResponse::printErrorResponseWithHeader("DBPermRolesToObjectMappings experienced an internal error."); 
-        }
+        if(count($possibleMatches) == 1 || count($possibleMatches) == 0)
+        {
+          $this->_returnedMapping = new PermRolesToObjectMappingsModel($roleMappingID, $tableName, $tableOID);
+          return;         
+        }        
+        JSONResponse::printErrorResponseWithHeader("DBPermRolesToObjectMappings experienced an internal error."); 
       }
-      catch(PDOException $e)
-      {
-        JSONResponse::printErrorResponseWithHeader("Unable to load roles - fatal database error: ".$e);
-      }      
+    }
+    catch(PDOException $e)
+    {
+      JSONResponse::printErrorResponseWithHeader("Unable to load roles - fatal database error: ".$e);
+    }      
+  }
+    
+  public function createRoleToObjectMapping()
+  {
+    if($this->_returnedMapping == NULL)
+      return null;
+    else
+      $this->deleteRoleToObjectMapping(); 
+    
+    $stmt = $this->dbh->prepare("INSERT INTO `PermRolesToObjectMappings` (id, rolemappingid, table, oid) VALUE (NULL, :rid, :tbl, :objectID)");
+    $stmt->bindParam(':rid', $this->_returnedMapping->_userID);
+    $stmt->bindParam(':tbl', $this->_returnedMapping->_projectID);
+    $stmt->bindParam(':objectID', $roleID); 
+
+    try{
+      if($stmt->execute())
+        return true;
+      else
+        return false;
+    }
+    catch(PDOException $e)
+    {
+      JSONResponse::printErrorResponseWithHeader("Unable to add or update role to object mapping - fatal database error: ".$e);
     }
   }
+  
+  public function deleteRoleToObjectMapping()
+  {
+    if($this->_returnedMapping == NULL)
+      return false;
+    
+    $stmt = $this->dbh->prepare("DELETE FROM `PermRolesToObjectMappings` WHERE `id` = :guid");     
+    $stmt->bindParam(':guid', $this->_returnedMapping->getID());
+
+    try{
+      if($stmt->execute())
+        return true;
+      else
+        return false; 
+    }
+    catch(PDOException $e)
+    {
+      JSONResponse::printErrorResponseWithHeader("Unable to add or update role to object mapping - fatal database error: ".$e);
+    }
+  }  
 }
 
 /* This is the model stored in the DB */
@@ -186,7 +224,55 @@ class DBPermProjectDefaultsModel extends DatabaseAdaptor
         JSONResponse::printErrorResponseWithHeader("Unable to load roles - fatal database error: ".$e);
       }      
     }        
+  }
+  
+  private function save($sqlQuery, $newInfo)
+  {
+    $stmt = $this->dbh->prepare($sqlQuery);
+    $stmt->bindParam(':pid', $this->_projectDefaults->getProjectID());
+    $stmt->bindParam(':did', $newInfo);
+
+    try{
+      if($stmt->execute())
+        return true;
+      else
+        return false;
+    }
+    catch(PDOException $e)
+    {
+      JSONResponse::printErrorResponseWithHeader("Unable to add or update role to object mapping - fatal database error: ".$e);
+    }
+
+  }
+  
+  public function saveNewProjectDefaults($everyonePerms, $defaultRole)
+  {     
+    $stmt = $this->dbh->prepare("INSERT INTO `PermProjectDefaults` (id, projectid, everyonepermissions, defaultroleid) VALUE (NULL, :pid, :eid, :rid)");
+    $stmt->bindParam(':pid', $this->_projectDefaults->getProjectID());
+    $stmt->bindParam(':eid', $everyonePerms);
+    $stmt->bindParam(':rid', $defaultRole);
+
+    try{
+      if($stmt->execute())
+        return true;
+      else
+        return false;
+    }
+    catch(PDOException $e)
+    {
+      JSONResponse::printErrorResponseWithHeader("Unable to add or update role to object mapping - fatal database error: ".$e);
+    }
+  }
+
+  public function updateProjectDefaultsEveryonePermission($newEveryonePerms)
+  {
+      return $this->save("UPDATE `PermProjectDefaults` SET `everyonepermissions` = :did WHERE `projectid` = :pid", $newRoleID); 
   } 
+  
+  public function updateProjectDefaultsRoleID($newDefaultRole)
+  {
+      return $this->save("UPDATE `PermProjectDefaults` SET `defaultroleid` = :did WHERE `projectid` = :pid", $newDefaultRole); 
+  }  
 }
 
 /* This is the model stored in the DB too */
@@ -231,10 +317,13 @@ class DBPermAssignmentMappingsModel extends DatabaseAdaptor
 {
    /* From the PermProjectDefaults Table */
   private $_permAssignmentModel;
+  private $_projectID;
+  private $_userID;
   
   public function __construct($projectContext, $userID)
   {
     $this->_projectID = $projectContext;
+    $this->_userID = $userID;
     
     parent::__construct();
   
@@ -251,7 +340,7 @@ class DBPermAssignmentMappingsModel extends DatabaseAdaptor
           $possibleMatches = $stmt->fetchAll(PDO::FETCH_ASSOC);
           
           if(count($possibleMatches) == 0)
-            return null;
+            $this->_permAssignmentModel = NULL;
           
           if(count($possibleMatches) > 1)
             JSONResponse::printErrorResponseWithHeader("Fatal: this project has more than one default!");
@@ -269,10 +358,65 @@ class DBPermAssignmentMappingsModel extends DatabaseAdaptor
         JSONResponse::printErrorResponseWithHeader("Unable to load roles - fatal database error: ".$e);
       }      
     }        
+  }
+  
+  private function save($sqlQuery, $roleID)
+  {
+    $stmt = $this->dbh->prepare($sqlQuery);
+    $stmt->bindParam(':uid', $this->_userID);
+    $stmt->bindParam(':pid', $this->_projectID);
+    $stmt->bindParam(':rid', $roleID); 
+
+    try{
+      if($stmt->execute())
+        return true;
+      else
+        return false; 
+    }
+    catch(PDOException $e)
+    {
+      JSONResponse::printErrorResponseWithHeader("Unable to add or update role to object mapping - fatal database error: ".$e);
+    }
+
+  }
+  
+  public function addAssignmentToRole($newRoleID)
+  {
+      return $this->save("INSERT INTO `PermAssignmentMappings` (id, userid, projectid, role) VALUE (NULL, :uid, :pid, :rid)", $newRoleID);
+  }
+  
+  public function alterAssignmentForRole($roleID)
+  {
+      return $this->save("UPDATE `PermAssignmentMappings` SET `role` = :rid WHERE `projectid` = :pid AND `userID` = :uid", $newRoleID); 
   } 
+  
+  public function deleteMapping()
+  {
+    if($this->_permAssignedModel == NULL)
+      return false;
+    
+    $stmt = $this->dbh->prepare("DELETE FROM `PermAssignmentMappings` WHERE `projectid` = :pid AND `userID` = :uid");     
+    $stmt->bindParam(':uid', $this->_userID);
+    $stmt->bindParam(':pid', $this->_projectID);
+
+    try{
+      if($stmt->execute())
+      {
+        return true;
+      } 
+      else
+      {
+        return false;
+      }      
+    }
+    catch(PDOException $e)
+    {
+      JSONResponse::printErrorResponseWithHeader("Unable to add or update role to object mapping - fatal database error: ".$e);
+    }
+  }
 }
 
-
+//***** OLD *******//
 
 
 /* Connects to our DB and gets the required information */
