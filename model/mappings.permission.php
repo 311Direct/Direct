@@ -27,22 +27,22 @@
 class PermRolesToObjectMappingsModel
 {
   /* From the PermRolesToObjectMapping Table */
-  protected $_id;
+  protected $_ID;
   protected $_roleMappingID;
   protected $_table;
   protected $_tableOID;
 
   public function __construct($roleMappingID, $tableName, $tablePrimaryKey)
   {
-    $this->_id = NULL; /* Means we have not spoken to the database */
-    $this->_roleMappingID = $roleMappingID;
+    $this->_ID = NULL; /* Means we have not spoken to the database */
+    $this->_roleMappingID = intval($roleMappingID);
     $this->_table = $tableName;
-    $this->_tableOID = $tablePrimaryKey;
+    $this->_tableOID = intval($tablePrimaryKey);
   }
 
   public function getID()
   {
-    return $this->_id;
+    return $this->_ID;
   }
   
   public function roleMappingID()
@@ -150,22 +150,22 @@ class DBPermRolesToObjectMappings extends DatabaseAdaptor
 class PermProjectDefaultsModel
 {
    /* From the PermProjectDefaults Table */
-  protected $_id;
+  protected $_ID;
   protected $_projectID;
   protected $_everyonePermissions;
   protected $_defaultRoleID;
 
   public function __construct($projectID, $everyonePermissions, $defaultRoleID, $tablePrimaryKey = NULL)
   {
-    $this->_id = $tablePrimaryKey; /* Means we have not spoken to the database */
-    $this->_projectID = $projectID;
+    $this->_ID = intval($tablePrimaryKey); /* Means we have not spoken to the database */
+    $this->_projectID = intval($projectID);
     $this->_everyonePermissions = $everyonePermissions;
-    $this->_defaultRoleID = $defaultRoleID;
+    $this->_defaultRoleID = intval($defaultRoleID);
   }
 
   public function getID()
   {
-    return $this->_id;
+    return $this->_ID;
   }
   
   public function getProjectID()
@@ -191,7 +191,6 @@ class DBPermProjectDefaultsModel extends DatabaseAdaptor
   
   public function __construct($projectContext)
   {
-    
     parent::__construct();
   
     if($projectContext > 0)
@@ -213,7 +212,7 @@ class DBPermProjectDefaultsModel extends DatabaseAdaptor
             
           if(count($possibleMatches) == 1)
           {
-            $this->_projectDefaults = new PermProjectDefaultsModel($projectContext, intval($possibleMatches[0][`everyonepermissions`]), intval($possibleMatches[0][`defaultroleid`]));
+            $this->_projectDefaults = new PermProjectDefaultsModel($projectContext, intval($possibleMatches[0]['everyonepermissions']), intval($possibleMatches[0]['defaultroleid']));
             return;         
           }        
           JSONResponse::printErrorResponseWithHeader("DBPermProjectDefaultsModel experienced an internal error."); 
@@ -279,22 +278,22 @@ class DBPermProjectDefaultsModel extends DatabaseAdaptor
 class PermAssignmentMappingsModel
 {
    /* From the PermRolesToObjectMapping Table */
-  protected $_id;
+  protected $_ID;
   protected $_userID;
   protected $_projectID;
   protected $_roleMappingID;
 
-  public function __construct($userID, $projectID, $roleMappingID, $tablePrimaryKey = NULL)
+  public function __construct($projectID, $userID, $roleMappingID, $tablePrimaryKey = NULL)
   {
-    $this->_id = $tablePrimaryKey; /* Means we have not spoken to the database */
-    $this->_userID = $userID;
-    $this->_projectID = $projectID;
-    $this->_roleMappingID = $roleMappingID;
+    $this->_ID = intval($tablePrimaryKey); /* Means we have not spoken to the database */
+    $this->_userID = intval($userID);
+    $this->_projectID = intval($projectID);
+    $this->_roleMappingID = intval($roleMappingID);
   }
 
   public function getID()
   {
-    return $this->_id;
+    return $this->_ID;
   }
   
   public function getUserID()
@@ -322,34 +321,35 @@ class DBPermAssignmentMappingsModel extends DatabaseAdaptor
   
   public function __construct($projectContext, $userID)
   {
-    $this->_projectID = $projectContext;
-    $this->_userID = $userID;
+    $this->_projectID = intval($projectContext);
+    $this->_userID = intval($userID);
     
     parent::__construct();
   
-    if($projectContext > 0)
+    if($projectContext > -1)
     {
       $stmt = $this->dbh->prepare("SELECT * FROM `PermAssignmentMappings` WHERE `projectid` = :pid AND `userID` = :uid");    
   
       $stmt->bindParam(':pid', $projectContext);
-      $stmt->bindParam(':pid', $userID);
+      $stmt->bindParam(':uid', $userID);
       
       try
       {
         if($stmt->execute()){
           $possibleMatches = $stmt->fetchAll(PDO::FETCH_ASSOC);
           
-          if(count($possibleMatches) == 0)
+          if(count($possibleMatches) < 1)
             $this->_permAssignmentModel = NULL;
           
           if(count($possibleMatches) > 1)
             JSONResponse::printErrorResponseWithHeader("Fatal: this project has more than one default!");
             
           if(count($possibleMatches) == 1)
-          {
-            $this->_permAssignmentModel = new PermAssignmentMappingsModel($projectContext, intval($possibleMatches[0][`projectid`]), intval($possibleMatches[0][`id`]), intval($possibleMatches[0][`role`]));
-            return;         
+          {            
+            $this->_permAssignmentModel = new PermAssignmentMappingsModel($projectContext, $possibleMatches[0]['projectid'], $possibleMatches[0]['id'], $possibleMatches[0]['role']); 
+            return $this;
           }        
+          
           JSONResponse::printErrorResponseWithHeader("DBPermProjectDefaultsModel experienced an internal error."); 
         }
       }
@@ -357,9 +357,14 @@ class DBPermAssignmentMappingsModel extends DatabaseAdaptor
       {
         JSONResponse::printErrorResponseWithHeader("Unable to load roles - fatal database error: ".$e);
       }      
-    }        
+    } 
   }
-  
+    
+  public function getModel()
+  {
+    return $this->_permAssignmentModel;
+  }        
+
   private function save($sqlQuery, $roleID)
   {
     $stmt = $this->dbh->prepare($sqlQuery);
