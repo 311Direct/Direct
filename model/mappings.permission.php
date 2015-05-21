@@ -31,13 +31,15 @@ class PermRolesToObjectMappingsModel
   protected $_roleMappingID;
   protected $_table;
   protected $_tableOID;
+  protected $_overridePermissions;
 
-  public function __construct($roleMappingID, $tableName, $tablePrimaryKey)
+  public function __construct($tablePrimaryKey = NULL, $roleMappingID, $tableName, $objectOID, $overridePermissions)
   {
-    $this->_ID = NULL; /* Means we have not spoken to the database */
+    $this->_ID = intval($tablePrimaryKey); /* Means we have not spoken to the database */
     $this->_roleMappingID = intval($roleMappingID);
     $this->_table = $tableName;
-    $this->_tableOID = intval($tablePrimaryKey);
+    $this->_tableOID = intval($objectOID);
+    $this->_overridePermissions = intval($overridePermissions);
   }
 
   public function getID()
@@ -59,6 +61,11 @@ class PermRolesToObjectMappingsModel
   {
     return $this->_tableOID;
   }   
+  
+  public function getOverridePermissions()
+  {
+    return $this->_overridePermissions;
+  }
 }
 
 class DBPermRolesToObjectMappings extends DatabaseAdaptor
@@ -89,7 +96,7 @@ class DBPermRolesToObjectMappings extends DatabaseAdaptor
           
         if(count($possibleMatches) == 1 || count($possibleMatches) == 0)
         {
-          $this->_returnedMapping = new PermRolesToObjectMappingsModel($roleMappingID, $tableName, $tableOID);
+          $this->_returnedMapping = new PermRolesToObjectMappingsModel($possibleMatches[0]['id'], $roleMappingID, $tableName, $tableOID, $possibleMatches[0]['override_priv_bit_mask']);
           return;         
         }        
         JSONResponse::printErrorResponseWithHeader("DBPermRolesToObjectMappings experienced an internal error."); 
